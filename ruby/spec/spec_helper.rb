@@ -1,3 +1,8 @@
 require 'rspec'
+require 'pry'
 
-require_relative '../lib/prueba'
+#fw contratos
+require_relative '../lib/contrato.rb'
+
+#fixtures
+require_relative 'fixture/mi_clase'

@@ -14,8 +14,8 @@ module Contratos
 
     module ContractsClassMethods
         def before_and_after_each_call(proc_before,proc_after)
-            puts "valor de self "  + self.inspect
-            puts "valor de class " + self.class.inspect
+            puts "valor de self #{self.inspect}"
+            puts "valor de class #{self.class.inspect}"
 
             @procs_before << proc_before
             @procs_after << proc_after
@@ -57,7 +57,7 @@ class Wrapper
             proc_after.call
         end
 
-        return value_return
+        value_return
     end
 
 end

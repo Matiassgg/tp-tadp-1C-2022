@@ -14,65 +14,40 @@ module Contratos
 
     module ContractsClassMethods
         def before_and_after_each_call(proc_before,proc_after)
-            puts "valor de self #{self.inspect}"
-            puts "valor de class #{self.class.inspect}"
-
             @procs_before << proc_before
             @procs_after << proc_after
         end
 
+        def exec_before_procs
+            @procs_before.each { |proc_before| proc_before.call }
+        end
+
+        def exec_after_procs
+            @procs_after.each { |proc_after| proc_after.call }
+        end
+
+        def method_added(name)
+            puts "Se llama method added de #{name}"
+            old_method = instance_method(name)
+            puts "Self en method added: #{self}"
+            __non_recursively__ do
+                define_method(name) do |*args, &block|
+                    puts "Entro a define_method"
+                    self.class.exec_before_procs
+                    old_method.bind(self).call(*args, &block)
+                    self.class.exec_after_procs
+                end
+            end
+        end
+
         def __non_recursively__
             return if Thread.current[:executing_contract_define_method]
-
+            puts "entré a non recursively"
             Thread.current[:executing_contract_define_method] = true
+            puts "non recursively --> true"
             yield
             Thread.current[:executing_contract_define_method] = false
+            puts "non recursively --> false"
         end
     end
 end
-
-# TODO: ver de deprecar esto por un method_added con define_method..
-class Wrapper
-
-    def initialize(instancia)
-        @instancia_asociada = instancia
-    end
-
-    def method_missing(nombre_metodo,*args,&bloque)
-        # Leer todos los procs before de la lista y ejecutarlos
-        procs_before = @instancia_asociada.class.class_variable_get(:@@procs_before)
-        # puts "los proc son"
-        # puts @instancia_asociada
-        # puts @instancia_asociada.class
-
-        procs_before.each do |proc_before|
-            proc_before.call
-        end
-
-        value_return = @instancia_asociada.send(nombre_metodo,*args,&bloque)
-
-        # Leer todos los procs after de la lista y ejecutarlos
-        procs_after = @instancia_asociada.class.class_variable_get(:@@procs_after)
-        procs_after.each do |proc_after|
-            proc_after.call
-        end
-
-        value_return
-    end
-
-end
-
-# # 1° requerimiento
-# instancia = MiClase.new
-# clase_wrapper = Wrapper.new(instancia)
-# clase_wrapper.mensaje_1
-# res = clase_wrapper.mensaje_2
-# puts "obtengo res = #{res}"
-# class MiClase
-#
-# def nuevo_metodo
-#     puts "nuevo_metodo"
-# end
-# end
-#
-# clase_wrapper.nuevo_metodo

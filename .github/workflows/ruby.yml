@@ -1,16 +1,22 @@
 name: Ruby specs
-on: [push,pull_request]
+on:
+  pull_request:
+    branches:
+      - master
+  release:
+    types:
+      - created
 jobs:
   rspec-test:
     name: RSpec
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         ruby-version: [2.7.2, 3]
 
     runs-on: ${{ matrix.os }}
-    
+
     defaults:
       run:
         working-directory: ruby

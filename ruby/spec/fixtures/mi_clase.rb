@@ -22,9 +22,4 @@ class MiClase
     proc { puts 'Entré a un mensaje 2' },
     proc { puts 'Salí de un mensaje 2' }
   )
-
-  # Con el wrapper no es necesario
-  def self.method_added(nombre)
-    puts "se agrega el metodo #{nombre}"
-  end
 end

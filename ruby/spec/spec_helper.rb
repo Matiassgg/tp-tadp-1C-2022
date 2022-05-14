@@ -5,4 +5,4 @@ require 'pry'
 require_relative '../lib/contrato.rb'
 
 #fixtures
-require_relative 'fixture/mi_clase'
+require_relative 'fixtures/mi_clase'

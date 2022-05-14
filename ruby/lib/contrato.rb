@@ -25,6 +25,8 @@ module Contratos
       @procs_after.each(&:call)
     end
 
+    private
+
     def method_added(name)
       old_method = instance_method(name)
       __non_recursively__ do

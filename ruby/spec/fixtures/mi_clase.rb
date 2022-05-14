@@ -3,12 +3,12 @@ require_relative '../../lib/contrato.rb'
 class MiClase
   include Contratos
 
-  def mensaje_1
+  def mensaje1
     puts 'mensaje_1'
     5
   end
 
-  def mensaje_2
+  def mensaje2
     puts "mensaje_2"
     3
   end

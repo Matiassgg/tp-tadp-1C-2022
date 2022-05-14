@@ -31,8 +31,9 @@ module Contratos
             __non_recursively__ do
                 define_method(name) do |*args, &block|
                     self.class.exec_before_procs
-                    old_method.bind(self).call(*args, &block)
+                    returned_values = old_method.bind(self).call(*args, &block)
                     self.class.exec_after_procs
+                    returned_values
                 end
             end
         end

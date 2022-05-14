@@ -24,7 +24,7 @@ describe MiClase do
   end
 
   context 'Any non defined method' do
-    let(:method) { %i[nil? class singleton_method methods].sample }
+    let(:method) { %i[nil? class methods].sample } # singleton_method
 
     it 'will not have an execution of the before procs' do
       expect(subject.class).to_not receive(:exec_before_procs)

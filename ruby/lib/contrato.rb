@@ -8,6 +8,7 @@ module Contratos
     klass.instance_eval do
       @procs_before = []
       @procs_after = []
+      @invariants = []
     end
   end
 
@@ -25,15 +26,29 @@ module Contratos
       @procs_after.each(&:call)
     end
 
+    def invariant(&expr)
+      @invariants << expr
+    end
+
+    def chequear_invariant
+      puts "contexto es " + self.inspect
+      puts "clase contexto es " + self.class.inspect
+      @invariants.each do |invariante|
+        raise "invariant exception" unless self.instance_eval(&invariante)
+      end
+    end
+
     private
 
     def method_added(name)
+      puts "Method name #{name}"
       old_method = instance_method(name)
       __non_recursively__ do
         define_method(name) do |*args, &block|
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
+          # self.class.chequear_invariant
           returned_values
         end
       end

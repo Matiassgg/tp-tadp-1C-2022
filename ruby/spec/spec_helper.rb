@@ -6,6 +6,7 @@ require_relative '../lib/contrato.rb'
 
 #fixtures
 require_relative 'fixtures/mi_clase'
+require_relative 'fixtures/guerrero'
 
 #Configs
 RSpec.configure do |config|

@@ -27,12 +27,9 @@ module Contratos
         end
 
         def method_added(name)
-            puts "Se llama method added de #{name}"
             old_method = instance_method(name)
-            puts "Self en method added: #{self}"
             __non_recursively__ do
                 define_method(name) do |*args, &block|
-                    puts "Entro a define_method"
                     self.class.exec_before_procs
                     old_method.bind(self).call(*args, &block)
                     self.class.exec_after_procs
@@ -42,12 +39,9 @@ module Contratos
 
         def __non_recursively__
             return if Thread.current[:executing_contract_define_method]
-            puts "entré a non recursively"
             Thread.current[:executing_contract_define_method] = true
-            puts "non recursively --> true"
             yield
             Thread.current[:executing_contract_define_method] = false
-            puts "non recursively --> false"
         end
     end
 end

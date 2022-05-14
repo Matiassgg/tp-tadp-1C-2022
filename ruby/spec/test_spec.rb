@@ -1,12 +1,14 @@
 require_relative 'spec_helper'
 
 describe 'suite de tests para 1° requerimiento' do
-    it 'Se mandan los mensajes de la ejecucion' do
-        clase_test = MiClase.new
-        # Debugging
-        # binding.pry
-        # expect(clase_test.mensaje_1).to be 5
-        # expect(clase_test.mensaje_2).to be 3
-    end
+  let(:mi_clase) { MiClase.new }
+
+  it 'Mensaje 1' do
+    expect(mi_clase.mensaje_1).to be 5
+  end
+
+  it 'mensaje 2' do
+    expect(mi_clase.mensaje_2).to be 3
+  end
 end
 

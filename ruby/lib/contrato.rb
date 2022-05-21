@@ -30,7 +30,7 @@ module Contratos
       @invariants << expr
     end
 
-    def chequear_invariant
+    def check_invariant
       puts "contexto es " + self.inspect
       puts "clase contexto es " + self.class.inspect
       @invariants.each do |invariante|
@@ -48,7 +48,7 @@ module Contratos
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
-          # self.class.chequear_invariant
+          # self.class.check_invariant
           returned_values
         end
       end

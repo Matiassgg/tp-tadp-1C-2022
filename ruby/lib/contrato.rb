@@ -1,5 +1,5 @@
 class PrePost
-  def initialize(contexto, params, args, block)
+  def initialize(contexto, params, args, block, result = nil)
     params.zip(args).each do |param, arg|
       contexto.define_singleton_method(param) do
         arg
@@ -7,10 +7,16 @@ class PrePost
     end
     @block = block
     @contexto = contexto
+    @result = result
   end
 
   def exec
-    @contexto.instance_eval &@block
+    binding.pry
+    if @result.nil?
+      @contexto.instance_eval &@block
+    else
+      @contexto.instance_exec(@result, &@block)
+    end
   end
 end
 
@@ -73,10 +79,12 @@ module Contratos
       abort(e.message)
     end
 
-    def exec_post(contexto)
-      puts "entra a exec_post y post es #{@post}"
-      contexto.instance_exec &@post unless @post.nil?
-      @post = nil
+    def exec_post(contexto, params, *args, result)
+      unless @post.nil?
+        raise "postcondition exception" unless PrePost.new(contexto, params, args, @post, result).exec
+      end
+    rescue RuntimeError => e
+      abort(e.message)
     end
 
     private
@@ -90,7 +98,7 @@ module Contratos
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
-          self.class.exec_post(self)
+          self.class.exec_post(self, parameters, *args, returned_values)
           self.class.check_invariant(self) unless self.respond_to?("#{name.to_s}=")
           returned_values
         end

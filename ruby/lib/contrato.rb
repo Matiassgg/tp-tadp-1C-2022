@@ -26,16 +26,15 @@ module Contratos
       @procs_after.each(&:call)
     end
 
-    def invariant(&expr)
-      @invariants << expr
+    def check_invariant(contexto)
+      puts "Entro a check invariant con contexto #{contexto}"
+      @invariants.each do |invariante|
+        return raise "invariant exception" unless contexto.instance_eval(&invariante)
+      end
     end
 
-    def check_invariant
-      puts "contexto es " + self.inspect
-      puts "clase contexto es " + self.class.inspect
-      @invariants.each do |invariante|
-        raise "invariant exception" unless self.instance_eval(&invariante)
-      end
+    def invariant(&expr)
+      @invariants << expr
     end
 
     private
@@ -48,7 +47,8 @@ module Contratos
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
-          # self.class.check_invariant
+          puts "llamo a check invariant con #{self}, method name #{name}"
+          self.class.check_invariant(self) unless self.respond_to?("#{name.to_s}=")
           returned_values
         end
       end

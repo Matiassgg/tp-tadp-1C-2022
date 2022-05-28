@@ -3,20 +3,6 @@ require_relative '../../lib/contrato.rb'
 class Guerrero
   include Contratos
 
-=begin
-  attr_accessor :variable_random
-
-  invariant { variable_random == 100 }
-
-  def initialize
-    self.variable_random = 100
-  end
-
-  def cambiar_valor_random
-    self.variable_random = 200
-  end
-=end
-
   attr_accessor :vida, :fuerza
 
   invariant { vida >= 0 }

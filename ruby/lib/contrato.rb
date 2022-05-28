@@ -1,7 +1,6 @@
 class PrePost
   def initialize(contexto, params, args, block)
-    params.zip(args).each do |param, arg|                     # [[:dividendo,4],[:dividor, 1]]
-      #instance_variable_set("@#{param}", arg)
+    params.zip(args).each do |param, arg|
       contexto.define_singleton_method(param) do
         arg
       end
@@ -58,7 +57,6 @@ module Contratos
     end
 
     def pre(&expr)
-      puts "defini un pre #{expr}"
       @pre = expr
     end
 
@@ -68,14 +66,6 @@ module Contratos
     end
 
     def exec_pre(contexto, params, *args)
-      relations = params.zip(args)
-      puts "entra a exec_pre"
-
-      dividendo = 4
-      divisor = 1
-      #self.instance_variable_set("@#{params[0]}".to_sym, args[0]) # define dividendo con valor 4
-      #self.instance_variable_set("@#{params[1]}".to_sym, args[1])
-      #contexto.instance_eval &@pre unless @pre.nil?
       unless @pre.nil?
         raise "precondition exception" unless PrePost.new(contexto, params, args, @pre).exec
       end
@@ -96,12 +86,10 @@ module Contratos
       parameters = old_method.parameters.map { |p| p[1] }
       __non_recursively__ do
         define_method(name) do |*args, &block|
-          puts "exec pre con metodo #{name}"
           self.class.exec_pre(self, parameters, *args)
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
-          puts "exec post con metodo #{name}"
           self.class.exec_post(self)
           self.class.check_invariant(self) unless self.respond_to?("#{name.to_s}=")
           returned_values

@@ -11,7 +11,6 @@ class PrePost
   end
 
   def exec
-    binding.pry
     if @result.nil?
       @contexto.instance_eval &@block
     else

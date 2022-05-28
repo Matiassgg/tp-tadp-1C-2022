@@ -27,10 +27,11 @@ module Contratos
     end
 
     def check_invariant(contexto)
-      puts "Entro a check invariant con contexto #{contexto}"
       @invariants.each do |invariante|
-        return raise "invariant exception" unless contexto.instance_eval(&invariante)
+        raise "invariant exception"  unless contexto.instance_eval(&invariante)
       end
+    rescue RuntimeError => e
+      abort(e.message)
     end
 
     def invariant(&expr)
@@ -40,14 +41,12 @@ module Contratos
     private
 
     def method_added(name)
-      puts "Method name #{name}"
       old_method = instance_method(name)
       __non_recursively__ do
         define_method(name) do |*args, &block|
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
-          puts "llamo a check invariant con #{self}, method name #{name}"
           self.class.check_invariant(self) unless self.respond_to?("#{name.to_s}=")
           returned_values
         end

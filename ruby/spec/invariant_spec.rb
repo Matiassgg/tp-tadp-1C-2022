@@ -16,8 +16,8 @@ describe Guerrero do
     context 'if the invariant condition is not satisfied' do
       let(:fuerza) { 200 }
 
-      it 'raises an error'  do #fails, waiting implementation
-        expect{guerrero}.to raise_error(RuntimeError).with_message("invariant exception")
+      it 'raises an error' do
+        expect{guerrero}.to raise_error(SystemExit).with_message("invariant exception")
       end
     end
   end
@@ -34,7 +34,7 @@ describe Guerrero do
       let(:fuerza) { 60 }
 
       it 'raises an error' do
-        expect{guerrero.send(method,otro)}.to raise_error(RuntimeError).with_message("invariant exception")
+        expect{guerrero.send(method,otro)}.to raise_error(SystemExit).with_message("invariant exception")
       end
     end
   end

@@ -1,20 +1,20 @@
 class PrePost
-  def initialize(contexto, params, args, block, result = nil)
+  def initialize(context, params, args, block, result = nil)
     params.zip(args).each do |param, arg|
-      contexto.define_singleton_method(param) do
+      context.define_singleton_method(param) do
         arg
       end
     end
     @block = block
-    @contexto = contexto
+    @context = context
     @result = result
   end
 
   def exec
     if @result.nil?
-      @contexto.instance_eval &@block
+      @context.instance_eval &@block
     else
-      @contexto.instance_exec(@result, &@block)
+      @context.instance_exec(@result, &@block)
     end
   end
 end
@@ -66,22 +66,19 @@ module Contratos
     end
 
     def post(&expr)
-      puts "defini un post #{expr}"
       @post = expr
     end
 
-    def exec_pre(contexto, params, *args)
-      unless @pre.nil?
-        raise "precondition exception" unless PrePost.new(contexto, params, args, @pre).exec
-      end
+    # se podrian abstraer
+
+    def exec_pre(contexto, params, *args, precondition)
+      raise "precondition exception" unless PrePost.new(contexto, params, args, precondition).exec
     rescue RuntimeError => e
       abort(e.message)
     end
 
-    def exec_post(contexto, params, *args, result)
-      unless @post.nil?
-        raise "postcondition exception" unless PrePost.new(contexto, params, args, @post, result).exec
-      end
+    def exec_post(contexto, params, *args, result, postcondition)
+      raise "postcondition exception" unless PrePost.new(contexto, params, args, postcondition, result).exec
     rescue RuntimeError => e
       abort(e.message)
     end
@@ -92,15 +89,21 @@ module Contratos
       old_method = instance_method(name)
       parameters = old_method.parameters.map { |p| p[1] }
       __non_recursively__ do
+        precondition = @pre
+        postcondition = @post
+
         define_method(name) do |*args, &block|
-          self.class.exec_pre(self, parameters, *args)
+          self.class.exec_pre(self, parameters, *args, precondition) if precondition
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs
-          self.class.exec_post(self, parameters, *args, returned_values)
+          self.class.exec_post(self, parameters, *args, returned_values, postcondition) if postcondition
           self.class.check_invariant(self) unless self.respond_to?("#{name.to_s}=")
           returned_values
         end
+
+        @pre = nil
+        @post = nil
       end
     end
 

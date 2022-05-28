@@ -1,3 +1,20 @@
+class PrePost
+  def initialize(contexto, params, args, block)
+    params.zip(args).each do |param, arg|                     # [[:dividendo,4],[:dividor, 1]]
+      #instance_variable_set("@#{param}", arg)
+      contexto.define_singleton_method(param) do
+        arg
+      end
+    end
+    @block = block
+    @contexto = contexto
+  end
+
+  def exec
+    @contexto.instance_eval &@block
+  end
+end
+
 module Contratos
   def self.included(klass)
     initialize_contracts_attrs(klass)
@@ -50,15 +67,25 @@ module Contratos
       @post = expr
     end
 
-    def exec_pre(contexto)
+    def exec_pre(contexto, params, *args)
+      relations = params.zip(args)
       puts "entra a exec_pre"
-      contexto.instance_eval(&@pre) unless @pre.nil?
-      @pre = nil
+
+      dividendo = 4
+      divisor = 1
+      #self.instance_variable_set("@#{params[0]}".to_sym, args[0]) # define dividendo con valor 4
+      #self.instance_variable_set("@#{params[1]}".to_sym, args[1])
+      #contexto.instance_eval &@pre unless @pre.nil?
+      unless @pre.nil?
+        raise "precondition exception" unless PrePost.new(contexto, params, args, @pre).exec
+      end
+    rescue RuntimeError => e
+      abort(e.message)
     end
 
     def exec_post(contexto)
       puts "entra a exec_post y post es #{@post}"
-      contexto.instance_eval(&@post) unless @post.nil?
+      contexto.instance_exec &@post unless @post.nil?
       @post = nil
     end
 
@@ -66,10 +93,11 @@ module Contratos
 
     def method_added(name)
       old_method = instance_method(name)
+      parameters = old_method.parameters.map { |p| p[1] }
       __non_recursively__ do
         define_method(name) do |*args, &block|
           puts "exec pre con metodo #{name}"
-          self.class.exec_pre(self)
+          self.class.exec_pre(self, parameters, *args)
           self.class.exec_before_procs
           returned_values = old_method.bind(self).call(*args, &block)
           self.class.exec_after_procs

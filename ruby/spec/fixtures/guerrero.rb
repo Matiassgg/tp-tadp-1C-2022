@@ -1,4 +1,4 @@
-require_relative '../../lib/contrato.rb'
+require_relative '../../lib/contrato'
 
 class Guerrero
   include Contratos

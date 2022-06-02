@@ -12,45 +12,45 @@ describe MiClase do
   context 'Any defined method' do
     let(:method) { %i[mensaje1 mensaje2].sample }
 
-    it 'will have an execution of the before procs' do
-      expect(described_class).to receive(:exec_before_procs).once
+    it 'will define before procs' do
       subject.send(method)
+      expect(described_class.instance_variable_get(:@procs_before).size).to eq 2
     end
 
-    it 'will have an execution of the after procs' do
-      expect(described_class).to receive(:exec_after_procs).once
+    it 'will define after procs' do
       subject.send(method)
+      expect(described_class.instance_variable_get(:@procs_after).size).to eq 2
     end
   end
 
-  context 'Any non defined method' do
-    let(:method) { %i[nil? class methods].sample } # singleton_method
-
-    it 'will not have an execution of the before procs' do
-      expect(described_class).to_not receive(:exec_before_procs)
-      subject.send(method)
-    end
-
-    it 'will not have an execution of the after procs' do
-      expect(described_class).to_not receive(:exec_after_procs)
-      subject.send(method)
-    end
-  end
-=begin
-  context 'Opening the class' do
-    before do
-      class MiClase
-        @proc = lambda { puts 'Test Before' }
-        @proc2 = lambda { puts 'Test After' }
-
-        before_and_after_each_call(@proc, @proc2)
-      end
-    end
-
-    it 'will execute the new hooks' do
-      expect(described_class).to receive(:before_and_after_each_call).with(lambda { puts 'Test Before' }, lambda { puts 'Test After' })
-      #expect(described_class.instance_variable_get(:@procs_before).lastto_json).to eq({lambda { puts 'Test Before' }}.to_json)
-    end
-  end
-=end
+  # VER QUE TESTEAR AHORA QUE EL METODO NO ES DE LA CLASE
+  #
+  # context 'Any non defined method' do
+  #   let(:method) { %i[nil? class methods].sample } # singleton_method
+  #
+  #   it 'will not  define before procs before procs' do
+  #     expect(described_class).to_not receive(:exec_before_procs)
+  #     subject.send(method)
+  #   end
+  #
+  #   it 'will not define before procs after procs' do
+  #     expect(described_class).to_not receive(:exec_after_procs)
+  #     subject.send(method)
+  #   end
+  # end
+  #   context 'Opening the class' do
+  #     before do
+  #       class MiClase
+  #         @proc = lambda { puts 'Test Before' }
+  #         @proc2 = lambda { puts 'Test After' }
+  #
+  #         before_and_after_each_call(@proc, @proc2)
+  #       end
+  #     end
+  #
+  #     it 'will execute the new hooks' do
+  #       expect(described_class).to receive(:before_and_after_each_call).with(lambda { puts 'Test Before' }, lambda { puts 'Test After' })
+  #       #expect(described_class.instance_variable_get(:@procs_before).lastto_json).to eq({lambda { puts 'Test Before' }}.to_json)
+  #     end
+  #   end
 end

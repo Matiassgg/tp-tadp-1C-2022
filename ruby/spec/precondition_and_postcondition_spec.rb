@@ -5,47 +5,53 @@ describe Operaciones do
     subject { described_class.new }
 
     context 'precondition' do
-      it 'check pre' do
-        expect(described_class).to receive(:exec_pre).once
-        subject.send(:dividir, *[10,2])
+      it 'defines the pre condition' do
+        subject.send(:dividir, 10, 2)
+        method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:dividir]
+        expect(method_dispatcher.instance_variable_get(:@precondition)).to be
       end
 
       it 'ok' do
-        expect(subject.send(:dividir, *[10,2])).to eq(5)
+        expect(subject.send(:dividir, 10, 2)).to eq(5)
       end
 
       it 'raises an error' do
-        expect{subject.send(:dividir, *[5,0])}.to raise_error(SystemExit).with_message("precondition exception")
+        expect { subject.send(:dividir, 5, 0) }.to raise_error(SystemExit).with_message('precondition exception')
       end
     end
 
     context 'postcondition' do
-      it 'check post condition' do
-        expect(described_class).to receive(:exec_post).once
-        subject.send(:dividir, *[10,2])
+      it 'defines the pre condition' do
+        subject.send(:dividir, 10, 2)
+        method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:dividir]
+        expect(method_dispatcher.instance_variable_get(:@postcondition)).to be
       end
 
       it 'ok' do
-        expect(subject.send(:dividir, *[10,2])).to eq(5)
+        expect(subject.send(:dividir, 10, 2)).to eq(5)
       end
 
       it 'raises an error' do
-        expect{Operaciones.new.send(:dividir, *[5,4])}.to raise_error(SystemExit).with_message("postcondition exception")
+        expect do
+          Operaciones.new.send(:dividir, 5, 4)
+        end.to raise_error(SystemExit).with_message('postcondition exception')
       end
     end
   end
 
   context '#resta' do
-    subject { described_class.new.send(:restar, *[10,2]) }
+    subject { described_class.new.send(:restar, 10, 2) }
 
-    it 'no llama a pre condition' do
-      expect(described_class).to_not receive(:exec_pre)
+    it 'not defines the pre condition' do
       subject
+      method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:restar]
+      expect(method_dispatcher.instance_variable_get(:@precondition)).to be_nil
     end
 
-    it 'no llama a post condition' do
-      expect(described_class).to_not receive(:exec_post)
+    it 'not defines the post condition' do
       subject
+      method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:restar]
+      expect(method_dispatcher.instance_variable_get(:@postcondition)).to be_nil
     end
   end
 end

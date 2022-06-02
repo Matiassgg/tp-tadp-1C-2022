@@ -3,38 +3,38 @@ require_relative 'spec_helper'
 describe Guerrero do
   let(:vida) { 100 }
   let(:fuerza) { 40 }
-  let(:otro) { described_class.new(50, 90)}
+  let(:otro) { described_class.new(50, 90) }
 
-  subject(:guerrero) { described_class.new(vida,fuerza) }
+  subject(:guerrero) { described_class.new(vida, fuerza) }
 
   context 'when initializes an instance' do
-    it 'checks the invariant' do
-      expect(described_class).to receive(:check_invariant).once
+    it 'defines the invariants' do
       guerrero
+      expect(described_class.instance_variable_get(:@invariants).size).to eq 2
     end
 
     context 'if the invariant condition is not satisfied' do
       let(:fuerza) { 200 }
 
       it 'raises an error' do
-        expect{guerrero}.to raise_error(SystemExit).with_message("invariant exception")
+        expect { guerrero }.to raise_error(SystemExit).with_message('invariant exception')
       end
     end
   end
 
   context 'after any instance method execution' do
-    let(:method) { "atacar".to_sym }
+    let(:method) { 'atacar'.to_sym }
 
-    it 'checks the invariant' do
-      expect(described_class).to receive(:check_invariant).at_least(:once)
-      guerrero.send(method,otro)
+    it 'defines the invariants' do
+      guerrero.send(method, otro)
+      expect(described_class.instance_variable_get(:@invariants).size).to eq 2
     end
 
     context 'if the invariant condition is not satisfied' do
       let(:fuerza) { 60 }
 
       it 'raises an error' do
-        expect{guerrero.send(method,otro)}.to raise_error(SystemExit).with_message("invariant exception")
+        expect { guerrero.send(method, otro) }.to raise_error(SystemExit).with_message('invariant exception')
       end
     end
   end

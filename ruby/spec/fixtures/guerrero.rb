@@ -22,3 +22,4 @@ class Guerrero
     otro.vida -= fuerza
   end
 end
+

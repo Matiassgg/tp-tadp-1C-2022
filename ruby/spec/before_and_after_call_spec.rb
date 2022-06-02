@@ -38,6 +38,7 @@ describe MiClase do
   #     subject.send(method)
   #   end
   # end
+  #
   #   context 'Opening the class' do
   #     before do
   #       class MiClase
@@ -49,8 +50,10 @@ describe MiClase do
   #     end
   #
   #     it 'will execute the new hooks' do
-  #       expect(described_class).to receive(:before_and_after_each_call).with(lambda { puts 'Test Before' }, lambda { puts 'Test After' })
-  #       #expect(described_class.instance_variable_get(:@procs_before).lastto_json).to eq({lambda { puts 'Test Before' }}.to_json)
+  #       expect(described_class).to receive(:before_and_after_each_call)
+  #       .with(lambda { puts 'Test Before' }, lambda { puts 'Test After' })
+  #       expect(described_class.instance_variable_get(:@procs_before).last.to_json).to
+  #       eq({lambda { puts 'Test Before' }}.to_json)
   #     end
   #   end
 end

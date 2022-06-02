@@ -1,4 +1,4 @@
-require_relative '../lib/prepost'
+require_relative '../lib/pre_post'
 require_relative '../lib/method_with_callbacks'
 
 module Contratos
@@ -66,5 +66,3 @@ module Contratos
     end
   end
 end
-
-

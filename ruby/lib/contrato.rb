@@ -12,7 +12,7 @@ module Contratos
       @procs_before = []
       @procs_after = []
       @invariants = []
-      @dispatcher = {}
+      @methods_with_callbacks = {}
       @pre = nil
       @post = nil
     end
@@ -46,11 +46,11 @@ module Contratos
         original_class = self
 
         # Faltaría chequear si ya existe?
-        @dispatcher[name] = MethodWithCallbacks.new(name, old_method, original_class, precondition, postcondition)
+        @methods_with_callbacks[name] = MethodWithCallbacks.new(name, old_method, original_class, precondition, postcondition)
 
         define_method(name) do |*args, &block|
           instance = self
-          original_class.instance_variable_get(:@dispatcher)[name].call(instance, *args, &block)
+          original_class.instance_variable_get(:@methods_with_callbacks)[name].call(instance, *args, &block)
         end
         @pre = nil
         @post = nil

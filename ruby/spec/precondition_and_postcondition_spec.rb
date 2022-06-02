@@ -7,8 +7,8 @@ describe Operaciones do
     context 'precondition' do
       it 'defines the pre condition' do
         subject.send(:dividir, 10, 2)
-        method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:dividir]
-        expect(method_dispatcher.instance_variable_get(:@precondition)).to be
+        method_with_callbacks = described_class.instance_variable_get(:@methods_with_callbacks)[:dividir]
+        expect(method_with_callbacks.instance_variable_get(:@precondition)).to be
       end
 
       it 'ok' do
@@ -23,8 +23,8 @@ describe Operaciones do
     context 'postcondition' do
       it 'defines the pre condition' do
         subject.send(:dividir, 10, 2)
-        method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:dividir]
-        expect(method_dispatcher.instance_variable_get(:@postcondition)).to be
+        method_with_callbacks = described_class.instance_variable_get(:@methods_with_callbacks)[:dividir]
+        expect(method_with_callbacks.instance_variable_get(:@postcondition)).to be
       end
 
       it 'ok' do
@@ -44,14 +44,14 @@ describe Operaciones do
 
     it 'not defines the pre condition' do
       subject
-      method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:restar]
-      expect(method_dispatcher.instance_variable_get(:@precondition)).to be_nil
+      method_with_callbacks = described_class.instance_variable_get(:@methods_with_callbacks)[:restar]
+      expect(method_with_callbacks.instance_variable_get(:@precondition)).to be_nil
     end
 
     it 'not defines the post condition' do
       subject
-      method_dispatcher = described_class.instance_variable_get(:@dispatcher)[:restar]
-      expect(method_dispatcher.instance_variable_get(:@postcondition)).to be_nil
+      method_with_callbacks = described_class.instance_variable_get(:@methods_with_callbacks)[:restar]
+      expect(method_with_callbacks.instance_variable_get(:@postcondition)).to be_nil
     end
   end
 end

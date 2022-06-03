@@ -1,5 +1,9 @@
-require_relative '../lib/pre_post'
-require_relative '../lib/method_with_callbacks'
+# frozen_string_literal: true
+
+require_relative 'pre_post'
+require_relative 'contract_executor'
+require_relative 'overrides'
+
 
 module Contratos
   def self.included(klass)
@@ -36,24 +40,38 @@ module Contratos
       @post = expr
     end
 
+    def add_contract_executor_for_signature(contract_executor, signature_name, override: false)
+      return if get_contract_executor(signature_name).present? && !override
+
+      @methods_with_callbacks[signature_name] = contract_executor
+    end
+
+    def get_contract_executor(signature_name)
+      @methods_with_callbacks[signature_name]
+    end
+
+    def pre_post_cleanup
+      @pre = nil
+      @post = nil
+    end
+
     private
 
     def method_added(name)
+      super
       old_method = instance_method(name)
       __non_recursively__ do
-        precondition = @pre
-        postcondition = @post
         original_class = self
 
         # Faltaría chequear si ya existe?
-        @methods_with_callbacks[name] = MethodWithCallbacks.new(name, old_method, original_class, precondition, postcondition)
+        contract_executor = ContractExecutor.new(name, old_method, original_class, @pre, @post)
+        add_contract_executor_for_signature(contract_executor, name)
 
         define_method(name) do |*args, &block|
           instance = self
-          original_class.instance_variable_get(:@methods_with_callbacks)[name].call(instance, *args, &block)
+          original_class.get_contract_executor(name).call(instance, *args, &block)
         end
-        @pre = nil
-        @post = nil
+        pre_post_cleanup
       end
     end
 

@@ -1,23 +1,9 @@
-class PrePost
-  def initialize(context, params, args, block, result = nil)
-    params.zip(args).each do |param, arg|
-      context.define_singleton_method(param) do
-        arg
-      end
-    end
-    @block = block
-    @context = context
-    @result = result
-  end
+# frozen_string_literal: true
 
-  def exec
-    if @result.nil?
-      @context.instance_eval &@block
-    else
-      @context.instance_exec(@result, &@block)
-    end
-  end
-end
+require_relative 'pre_post'
+require_relative 'contract_executor'
+require_relative 'overrides'
+
 
 module Contratos
   def self.included(klass)
@@ -30,6 +16,7 @@ module Contratos
       @procs_before = []
       @procs_after = []
       @invariants = []
+      @methods_with_callbacks = {}
       @pre = nil
       @post = nil
     end
@@ -39,22 +26,6 @@ module Contratos
     def before_and_after_each_call(proc_before, proc_after)
       @procs_before << proc_before
       @procs_after << proc_after
-    end
-
-    def exec_before_procs
-      @procs_before.each(&:call)
-    end
-
-    def exec_after_procs
-      @procs_after.each(&:call)
-    end
-
-    def check_invariant(contexto)
-      @invariants.each do |invariante|
-        raise "invariant exception"  unless contexto.instance_eval(&invariante)
-      end
-    rescue RuntimeError => e
-      abort(e.message)
     end
 
     def invariant(&expr)
@@ -69,41 +40,38 @@ module Contratos
       @post = expr
     end
 
-    # se podrian abstraer
+    def add_contract_executor_for_signature(contract_executor, signature_name, override: false)
+      return if get_contract_executor(signature_name).present? && !override
 
-    def exec_pre(contexto, params, *args, precondition)
-      raise "precondition exception" unless PrePost.new(contexto, params, args, precondition).exec
-    rescue RuntimeError => e
-      abort(e.message)
+      @methods_with_callbacks[signature_name] = contract_executor
     end
 
-    def exec_post(contexto, params, *args, result, postcondition)
-      raise "postcondition exception" unless PrePost.new(contexto, params, args, postcondition, result).exec
-    rescue RuntimeError => e
-      abort(e.message)
+    def get_contract_executor(signature_name)
+      @methods_with_callbacks[signature_name]
+    end
+
+    def pre_post_cleanup
+      @pre = nil
+      @post = nil
     end
 
     private
 
     def method_added(name)
+      super
       old_method = instance_method(name)
-      parameters = old_method.parameters.map { |p| p[1] }
       __non_recursively__ do
-        precondition = @pre
-        postcondition = @post
+        original_class = self
+
+        # Faltaría chequear si ya existe?
+        contract_executor = ContractExecutor.new(name, old_method, original_class, @pre, @post)
+        add_contract_executor_for_signature(contract_executor, name)
 
         define_method(name) do |*args, &block|
-          self.class.exec_pre(self, parameters, *args, precondition) if precondition
-          self.class.exec_before_procs
-          returned_values = old_method.bind(self).call(*args, &block)
-          self.class.exec_after_procs
-          self.class.exec_post(self, parameters, *args, returned_values, postcondition) if postcondition
-          self.class.check_invariant(self) unless self.respond_to?("#{name.to_s}=")
-          returned_values
+          instance = self
+          original_class.get_contract_executor(name).call(instance, *args, &block)
         end
-
-        @pre = nil
-        @post = nil
+        pre_post_cleanup
       end
     end
 

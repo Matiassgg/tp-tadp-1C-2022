@@ -13,6 +13,4 @@ class Operaciones
   def restar(minuendo, sustraendo)
     minuendo - sustraendo
   end
-
 end
-

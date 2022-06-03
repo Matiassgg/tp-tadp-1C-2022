@@ -1,4 +1,4 @@
-require_relative '../../lib/contrato.rb'
+require_relative '../../lib/contrato'
 
 class MiClase
   include Contratos
@@ -9,7 +9,7 @@ class MiClase
   end
 
   def mensaje2
-    puts "mensaje_2"
+    puts 'mensaje_2'
     3
   end
 

@@ -1,4 +1,4 @@
-require_relative '../../lib/contrato.rb'
+require_relative '../../lib/contrato'
 
 class Guerrero
   include Contratos
@@ -22,3 +22,4 @@ class Guerrero
     otro.vida -= fuerza
   end
 end
+

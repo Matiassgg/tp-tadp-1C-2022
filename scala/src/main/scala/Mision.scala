@@ -1,4 +1,4 @@
-class Mision(tareas: Array[Tarea]) {
+class Mision(tareas: List[Tarea]) {
 
   def tareasARealizar = tareas
 
@@ -7,7 +7,7 @@ class Mision(tareas: Array[Tarea]) {
   def pudoRealizarMision(equipo: Equipo): Boolean = equipo.realizarMision(this)
 }
 
-class Tarea(nombre: String, consecuencia: Array[Efecto], restricciones: Array[Restriccion]) {
+class Tarea(nombre: String, consecuencia: List[Efecto], restricciones: List[Restriccion]) {
 
   def cumpleRequisitos(heroe: Heroe): Boolean =
     restricciones.forall(r => heroe.tieneRequisito(r))

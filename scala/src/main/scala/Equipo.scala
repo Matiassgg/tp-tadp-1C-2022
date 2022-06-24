@@ -1,4 +1,4 @@
-class Equipo(miembros: Array[Heroe]) {
+class Equipo(miembros: List[Heroe]) {
 
   def realizarMision(mision: Mision): Boolean = {
     if (miembros

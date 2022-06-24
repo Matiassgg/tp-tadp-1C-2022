@@ -1,4 +1,4 @@
-class Mision(tareas: Array[Tarea]) {
+class Mision(tareas: List[Tarea]) {
 
   def tareasARealizar = tareas
 

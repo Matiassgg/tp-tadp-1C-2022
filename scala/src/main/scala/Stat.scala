@@ -4,5 +4,5 @@ object TipoStat extends Enumeration {
 }
 
 case class Stat(tipo : TipoStat.Nombre, _value : Int) {
-  val value : Int = if (_value > 1) _value else 1
+  var value : Int = if (_value > 1) _value else 1
 }

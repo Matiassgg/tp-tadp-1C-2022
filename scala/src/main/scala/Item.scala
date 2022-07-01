@@ -1,16 +1,27 @@
-//object TipoItem extends Enumeration {
-//  type Tipo = Value
-//
-//  val Cabeza, Torso, Mano, Talisman = Value
-//}
-
-//class Item(nombre: String, val tipo: TipoItem.Tipo, val restricciones: Array[Restriccion], val powerUps: Array[Stat])
-//var casco = new Item("casco vikingo", TipoItem.Cabeza, Array(), Array(new Stat(TipoStat.HP, 10)))
-
 trait TipoItem
 object Cabeza extends TipoItem
 object Torso extends TipoItem
 object Mano extends TipoItem
 object Talisman extends TipoItem
 
-class Item(nombreItem: String, val tipoItem: TipoItem, val statsAfectados: List[Stat])
+case class ItemInvalidoException(message: String) extends RuntimeException(message)
+
+sealed trait ResultadoChequeoDeItems
+case class ItemValidoPara(Heroe: Heroe) extends ResultadoChequeoDeItems
+case class ItemInvalidoPara(Heroe: Heroe, razon: Exception) extends ResultadoChequeoDeItems
+
+class Item(nombreItem: String, val tipoItem: TipoItem, val statsAfectados: List[Stat], val restricciones : List[Restriccion]) {
+
+  def validarRestriccionesCon(heroe : Heroe): ResultadoChequeoDeItems = {
+    try {
+      if (restricciones.forall(restriccion => restriccion.verificar(heroe))) {
+        ItemValidoPara(heroe)
+      } else {
+        ItemInvalidoPara(heroe, ItemInvalidoException("El heroe no contiene el item en su inventario"))
+      }
+    } catch {
+      case e: ItemInvalidoException => ItemInvalidoPara(heroe, e)
+    }
+  }
+
+}

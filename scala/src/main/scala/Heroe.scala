@@ -1,46 +1,54 @@
-sealed trait ResultadoItemEquipado
-case class ItemEquipadoExitoso(Heroe: Heroe) extends ResultadoItemEquipado
-case class ItemEquipadoFallido(Heroe: Heroe, razon: Exception) extends ResultadoItemEquipado
+//==========================================================================
+// HEROE
+//==========================================================================
+case class Equipamiento(
+                  cabeza: Item,
+                  torso: Item,
+                  manos: List[Item],
+                  talismanes: List[Item]
+                  ){
+  require(manos.size <= 2, "Mostro, no soy un pulpo, solo tengo 2 manos!")
 
-class Heroe(stats : List[Stat], inventario : List[Item], itemsEquipados : List[Item], trabajo : Trabajo) {
-
-  def modificarStat(statTipo: TipoStat.Nombre, valueStat : Int, operacionSobreStat : StatsOperations.Operation): List[Stat] = {
-    this.stats match {
-      case statsHead :: statBase :: tailStats =>
-        if (statBase.tipo == statTipo) statsHead :: operacionSobreStat(statBase, Stat(statTipo, valueStat)) :: tailStats else this.stats
-
+  def agregarItem(item: Item) : Equipamiento = {
+    item.cuerpoHeroe match {
+      case Cabeza => copy(cabeza = item)
+      case Torso => copy(torso = item)
+      case Mano => copy(manos = manos.tail.appended(item)) // ver tema de armas que  ocupan dos manoplas
+      case Talisman => copy(talismanes = talismanes.appended(item))
     }
   }
 
-  def equiparItem(item : Item): ResultadoItemEquipado = {
-    try {
-      item.validarRestriccionesCon(this)
-      this.itemsEquipados match {
-        case List() => ItemEquipadoExitoso(new Heroe(this.stats,this.inventario,this.itemsEquipados.appended(item),this.trabajo))
-        case _ :: itemMismoTipo :: _ =>
-          if (item.tipoItem == itemMismoTipo.tipoItem) {
-            ItemEquipadoExitoso(new Heroe(this.stats,this.inventario,this.itemsEquipados.appended(item),this.trabajo))
-          } else {
-            ItemEquipadoFallido(this, ItemInvalidoException("No se pudo equipar el item!"))
-          }
-      }
-    } catch {
-      case e: ItemInvalidoException => ItemEquipadoFallido(this, e)
-    }
-  }
+  def items : List[Item] = List(List(cabeza, torso), manos, talismanes).flatten
+  def incrementoHP: Int = items.map(item=>item.incrementos.HP).sum
+  def incrementoVelocidad: Int = items.map(item=>item.incrementos.velocidad).sum
+  def incrementoInteligencia: Int = items.map(item=>item.incrementos.inteligencia).sum
+  def incrementoFuerza: Int = items.map(item=>item.incrementos.fuerza).sum
+}
+
+case class Heroe(stats : Stats, inventario : List[Item], equipamiento: Equipamiento, trabajo : Trabajo) {
+
+  def HP: Int = stats.HP.value + trabajo.incrementos.HP + equipamiento.incrementoHP
+
+  def velocidad: Int = stats.velocidad.value + trabajo.incrementos.velocidad + equipamiento.incrementoVelocidad
+
+  def inteligencia: Int = stats.inteligencia.value + trabajo.incrementos.inteligencia + equipamiento.incrementoInteligencia
+
+  def fuerza: Int = stats.fuerza.value + trabajo.incrementos.fuerza + equipamiento.incrementoFuerza
 
   def convertirseEn(nuevoTrabajo: Trabajo): Heroe = {
-    new Heroe(this.stats, this.inventario, this.itemsEquipados, nuevoTrabajo)
+    copy(trabajo = nuevoTrabajo)
   }
 
-  def getTrabajo: Trabajo = trabajo
-
-
-  def getValueOfStat(tipoStat : TipoStat.Nombre): Int = {
-    // TODO: Terminar de revisar
-//    val mapStatTrabajo = trabajo.statsAfectados.find(statMap => statMap.keys)
-//    val statBaseHeroe = stats.find(stat => stat.tipo == tipoStat)
-//    val statsItemsEquipados = itemsEquipados.filter(item => item.statsAfectados.contains(tipoStat))
-    1
+  def equiparseCon(item: Item): Heroe = {
+    copy(equipamiento = equipamiento.agregarItem(item))
   }
+
 }
+  //==========================================================================
+  // Trabajo
+  //==========================================================================
+
+
+  //==========================================================================
+  // Inventario
+  //==========================================================================

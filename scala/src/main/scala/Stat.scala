@@ -1,8 +1,22 @@
-object TipoStat extends Enumeration {
-  type Nombre = Value
-  val HP, Fuerza, Velocidad, Inteligencia = Value
+case class Stats(
+    HP: HP,
+    inteligencia: Inteligencia,
+    velocidad: Velocidad,
+    fuerza: Fuerza
+) {
 }
 
-case class Stat(tipo : TipoStat.Nombre, _value : Int) {
-  var value : Int = if (_value > 1) _value else 1
+sealed trait Stat
+case class HP(value: Int) extends Stat{
+  require(value > 1, "HP debe ser mayor a 1")
+}
+case class Inteligencia(value: Int) extends Stat{
+  require(value > 1, "inteligencia debe ser mayor a 1")
+}
+case class Velocidad(value: Int) extends Stat{
+  require(value > 1, "fuerza debe ser mayor a 1")
+}
+
+case class Fuerza(value: Int) extends Stat{
+  require(value > 1, "velocidad debe ser mayor a 1")
 }

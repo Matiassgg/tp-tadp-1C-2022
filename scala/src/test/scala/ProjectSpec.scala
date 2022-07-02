@@ -1,49 +1,67 @@
-import TipoStat.HP
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.freespec.AnyFreeSpec
-
-import scala.collection.immutable.Map
 
 class ProjectSpec extends AnyFreeSpec {
 
   "TADPQuest Tests" - {
 
     "Tests de stats" - {
-      "Los stats creados nunca pueden tener valores negativos" in {
-        var statHP = Stat(TipoStat.HP, 10)
-        statHP.value shouldBe 10
-        statHP = Stat(TipoStat.HP, -1)
-        statHP.value shouldBe 1
+      "Se pueden crear stats" in {
+        val hp: HP = HP(10)
+        val inteligencia: Inteligencia = Inteligencia(10)
+        val velocidad: Velocidad = Velocidad(29)
+        val fuerza: Fuerza = Fuerza(29)
+        val stats: Stats = Stats(hp, inteligencia, velocidad, fuerza)
+        stats.HP.value shouldBe 10
+      }
+
+      "No se pueden crear stats negativos" in {
+        assertThrows[IllegalArgumentException] {
+          val _: HP = HP(-10)
+        }
       }
     }
 
     "Tests de Heroe" - {
-      "Tests de Trabajo" - {
-        "El heroe puede cambiar de trabajo" in {
-          val statsAfectados = List(
-            Map(Stat(TipoStat.HP, 10) -> StatsOperations.sumaDeStats),
-            Map(Stat(TipoStat.Fuerza, 15) -> StatsOperations.sumaDeStats),
-            Map(Stat(TipoStat.Inteligencia, 10) -> StatsOperations.restaDeStats)
-          )
-          val guerrero = new Trabajo(TipoStat.Fuerza, statsAfectados)
-          val ladron = new Trabajo(TipoStat.Fuerza, statsAfectados)
-          val heroeBase = new Heroe(null, null, null, guerrero)
+      val hp: HP = HP(10)
+      val inteligencia: Inteligencia = Inteligencia(10)
+      val velocidad: Velocidad = Velocidad(29)
+      val fuerza: Fuerza = Fuerza(29)
+      val stats: Stats = Stats(hp, inteligencia, velocidad, fuerza)
+      val guerrero = new Trabajo(fuerza: Fuerza, Incrementos(10, 15, -10))
+      val item_cabeza: Item = Item(Cabeza, Incrementos(1, 0, 0, 0), null)
+      val item_torso: Item = Item(Torso, Incrementos(2, 0, 0, 0), null)
+      val item_manos: List[Item] = List(new Item(Mano, Incrementos(3, 0, 0, 0), null))
+      val item_talismanes: List[Item] = List(new Item(Talisman, Incrementos(3, 0, 0, 0), null))
+      val equipamiento: Equipamiento = new Equipamiento(item_cabeza, item_torso, item_manos, item_talismanes)
+      val ladron = new Trabajo(velocidad: Velocidad, Incrementos(-5, 0, 0, 10))
 
-          val heroeConvertido: Heroe = heroeBase.convertirseEn(ladron)
-          heroeConvertido.getTrabajo shouldBe ladron
+      "Tests de Trabajo" - {
+        val heroeBase = Heroe(stats, null, equipamiento, guerrero)
+
+        "El heroe puede cambiar de trabajo" in {
+
+          val heroeLadron: Heroe = heroeBase.convertirseEn(ladron)
+          heroeLadron.trabajo shouldBe ladron
+        }
+
+        "El heroe cambia sus stats al cambiar de trabajo" in {
+          val heroeLadron: Heroe = heroeBase.convertirseEn(ladron)
+          heroeLadron.HP shouldBe 14
+          heroeLadron.inteligencia shouldBe 10
+        }
+
+        "El heroe puede cambiar a ningun trabajo" in {
+          val heroeConvertido: Heroe = heroeBase.convertirseEn(null)
+          heroeConvertido.trabajo shouldBe null
         }
       }
 
       "Tests de Item" - {
         "Los items de un heroe afectan a sus stats" in {
-          val statsBaseHeroe: List[Stat] = List[Stat](Stat(TipoStat.HP, 10), Stat(TipoStat.Fuerza, 10), Stat(TipoStat.Velocidad, 10), Stat(TipoStat.Inteligencia, 10))
-          val itemsIniciales: List[Item] = List.empty[Item]
-          val inventarioInicial: List[Item] = List.empty[Item]
-          val heroeBase = new Heroe(statsBaseHeroe, itemsIniciales, inventarioInicial, null)
-
-          heroeBase.modificarStat(TipoStat.HP, 50, StatsOperations.sumaDeStats)
-
-          heroeBase.getValueOfStat(HP) shouldBe 50
+          val stats2: Stats = Stats(hp, inteligencia, velocidad, fuerza)
+          val heroeBase2 = Heroe(stats2, null, equipamiento, guerrero)
+          heroeBase2.HP shouldBe 29
         }
       }
     }

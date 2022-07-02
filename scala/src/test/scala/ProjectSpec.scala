@@ -3,11 +3,35 @@ import org.scalatest.freespec.{AnyFreeSpec}
 
 class ProjectSpec extends AnyFreeSpec {
 
-  "Este proyecto" - {
+  "TADPQuest Tests" - {
 
-    "cuando está correctamente configurado" - {
-      "debería resolver las dependencias y pasar este test" in {
-        Prueba.materia shouldBe "tadp"
+    "Tests de Heroe" - {
+      "Obtener stats" in {
+        val heroe1 = new Heroe()
+//        heroe1.leerStats should(containWord = "Fuerza")
+      }
+
+      "Equipar un item" in {
+        //        Prueba.materia shouldBe "tadp"
+        var heroe1 = new Heroe()
+      }
+
+      "Cambiar de trabajo" in {
+        //        Prueba.materia shouldBe "tadp"
+        var heroe1 = new Heroe()
+      }
+    }
+
+    "Tests de Equipo" - {
+      "Realizar mision" in {
+
+        val equipo = new Equipo(Array(new Heroe(), new Heroe()))
+
+//        equipo.realizarMision(new Mision(Array(new Tarea(), new Tarea()))) match {
+//          case
+//        }
+//
+//        heroe1.leerStats should(containWord = "Fuerza")
       }
     }
   }

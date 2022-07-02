@@ -7,13 +7,13 @@ case class Equipamiento(
                   manos: List[Item],
                   talismanes: List[Item]
                   ){
-  require(manos.size <= 2, "Mostro, no soy un pulpo, solo tengo 2 manos!")
+  require(manos.size <= 2, "Solo hay dos manos!")
 
   def agregarItem(item: Item) : Equipamiento = {
     item.cuerpoHeroe match {
       case Cabeza => copy(cabeza = item)
       case Torso => copy(torso = item)
-      case Mano => copy(manos = manos.tail.appended(item)) // ver tema de armas que  ocupan dos manoplas
+      case Mano => copy(manos = manos.tail.appended(item)) // ver tema de armas que  ocupan dos manos
       case Talisman => copy(talismanes = talismanes.appended(item))
     }
   }

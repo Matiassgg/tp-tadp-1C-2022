@@ -1,10 +1,5 @@
 class Mision(tareas: List[Tarea]) {
 
-  def tareasARealizar = tareas
-
-  def verTareas() = tareas.foreach(t => t.getNombre)
-
-  def pudoRealizarMision(equipo: Equipo): Boolean = equipo.realizarMision(this)
 }
 
 class Tarea(nombre: String, consecuencia: List[Efecto], restricciones: List[Restriccion]) {

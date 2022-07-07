@@ -1,8 +1,12 @@
-object TipoItem extends Enumeration {
-  type Tipo = Value
+//case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restriccion: Heroe => Boolean) {
+//
+//}
+//
+//sealed trait CuerpoHeroe
+//case object Cabeza extends CuerpoHeroe
+//case object Torso extends CuerpoHeroe
+//case object Mano extends CuerpoHeroe
+//case object Talisman extends CuerpoHeroe
 
-  val Cabeza, Torso, Mano, Talisman = Value
-}
 
-class Item(nombre: String, val tipo: TipoItem.Tipo, val restricciones: Array[Restriccion], val powerUps: Array[Stat])
-//var casco = new Item("casco vikingo", TipoItem.Cabeza, Array(), Array(new Stat(TipoStat.HP, 10)))
+

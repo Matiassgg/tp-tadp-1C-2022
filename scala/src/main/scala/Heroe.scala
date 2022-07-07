@@ -1,112 +1,121 @@
-import TipoItem.Tipo
+//==========================================================================
+// HEROE
+//==========================================================================
+case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restriccion: Heroe => Boolean) {
+}
 
-import scala.collection.mutable
+trait Trabajo {
+  def statPrincipal: Heroe => Int
+  def aumentarStats: Heroe => Heroe = (h: Heroe) => h.setStat(h.stats)
+}
 
-class NoSePuedeCompletarTareaException(s: String) extends Exception(s)
+case object Guerrero extends Trabajo {
+  def statPrincipal: Heroe => Int = _.stats.fuerza
+  override def aumentarStats: Heroe => Heroe = {
+    super.aumentarStats andThen(_.cambiarHP(10).cambiarFuerza(15).cambiarInteligencia(-10))
+  }
+}
+case object Mago extends Trabajo {
+  def statPrincipal: Heroe => Int = _.stats.inteligencia
+}
+case object Ladron extends Trabajo {
+  def statPrincipal: Heroe => Int = _.stats.velocidad
+}
 
-class Heroe {
-  val stats = new Stats().initStats
-  val inventario = new Inventario(this).initInventario
-  var trabajo: Option[Trabajo] = _
+//class Trabajo(val statPrincipal: Int, clase: TipoTrabajo, val incrementos: Incrementos) {
+//
+//}
 
-  @throws(classOf[NoSePuedeCompletarTareaException])
-  def realizarTarea(tarea: Tarea): Unit = {
-    if (!tarea.fueCompletada(this))
-      throw new NoSePuedeCompletarTareaException(s"La tarea ${tarea.getNombre} no pudo ser completada. Mision fallida")
+
+//case class Incremento (HP: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
+case class Stats (HP: Int, inteligencia: Int, fuerza: Int, velocidad: Int) {
+  require(HP > 1, "HP debe ser mayor a 1")
+  require(inteligencia > 1, "inteligencia debe ser mayor a 1")
+  require(fuerza > 1, "fuerza debe ser mayor a 1")
+  require(velocidad > 1, "velocidad debe ser mayor a 1")
+
+  def sumarAtributo(v1: Int, v2: Int) = (v1+v2).max(1)
+
+  def cambiarHP(valor: Int) = copy(HP= sumarAtributo(HP, valor))
+  def cambiarFuerza(valor: Int) = copy(fuerza= sumarAtributo(fuerza, valor))
+  def cambiarInteligencia(valor: Int) = copy(inteligencia= sumarAtributo(inteligencia, valor))
+}
+
+
+
+
+sealed trait CuerpoHeroe
+case object Cabeza extends CuerpoHeroe
+case object Torso extends CuerpoHeroe
+case object Mano extends CuerpoHeroe
+case object Talisman extends CuerpoHeroe  // Tal vez Cuello en vez de Talisman
+
+case class Equipamiento(
+                  cabeza: Item,
+                  torso: Item,
+                  manos: List[Item],
+                  talismanes: List[Item]
+                  ){
+  require(manos.size <= 2, "Solo hay dos manos!")
+
+  def agregarItem(item: Item) : Equipamiento = {
+    item.cuerpoHeroe match {
+      case Cabeza => copy(cabeza = item)
+      case Torso => copy(torso = item)
+      case Mano => copy(manos = manos.tail.appended(item)) // ver tema de armas que  ocupan dos manos
+      case Talisman => copy(talismanes = talismanes.appended(item))
+    }
   }
 
-  def sufrirEfectosDeRealizarTarea(efectos: Array[Efecto]): Unit = {
-    efectos.foreach( e => stats.modificar(new Stat(e.stat, stats(e.stat)), e.operacion))
-  }
+  def items : List[Item] = List(List(cabeza, torso), manos, talismanes).flatten
+  def incrementoHP: Int = items.map(item=>item.incrementos.HP).sum
+  def incrementoVelocidad: Int = items.map(item=>item.incrementos.velocidad).sum
+  def incrementoInteligencia: Int = items.map(item=>item.incrementos.inteligencia).sum
+  def incrementoFuerza: Int = items.map(item=>item.incrementos.fuerza).sum
 
-  def leerStats: Unit = {
-    stats.foreach(x => println(s"nombre: ${x._1} valor: ${x._2}"))
-  }
+  def calcularIncrementos(heroe: Heroe): Heroe = ???
+}
 
-  def equipar(item: Item): Unit = {
-    val puedeEquipar = item.restricciones.forall(r => r.cumpleRestriccion(this))
-    if (puedeEquipar) inventario.agregarAInventario(item) else println("El item no puede ser equipado")
-  }
+case class Heroe(stats: Stats, inventario : List[Item], equipamiento: Equipamiento, trabajo : Option[Trabajo]) {
 
-  def guardarEnInventario(item: Item): Unit = {
-
-    //    Se equipa siempre y cuando cumpla las restricciones
-  }
-
-  //  def obtenerDeInventario: Item = {
-  //    Leo el inventario con un numero para cada item
-  //    usuario ingresa numero
-  //    se devuelve ese item
-  //  }
-
-  def convertirseEn(nuevoTrabajo: Trabajo): Unit = {
-    nuevoTrabajo.powerUps.foreach(p => stats.modificar(p, Stats.incrementar(p.valor)))
-    nuevoTrabajo.quedarEfectivo(this)
-    trabajo = Option(nuevoTrabajo)
-  }
-
-  def renunciar(actualTrabajo: Trabajo): Unit = {
-    actualTrabajo.powerUps.foreach(p => stats.modificar(p, Stats.decrementar(p.valor)))
-  }
-
-  def cambiarTrabajo(nuevo: Trabajo): Unit = {
-    if (trabajo.isDefined) {
-      renunciar(trabajo.get)
+  val statPrincipal: Int = trabajo.map(_.statPrincipal(this)).getOrElse(0)
+  def statsConIncrementos: Stats = {
+    val heroeConIncrementos = trabajo match {
+      case Some(unTrabajo) => unTrabajo.aumentarStats(this)
+      case None => this
     }
 
-    convertirseEn(nuevo)
+    equipamiento.calcularIncrementos(heroeConIncrementos).stats
   }
+  def HP = statsConIncrementos.HP
+  //def HP: Int = stats.HP + trabajo.incrementos.HP + equipamiento.incrementoHP
 
-  def tieneRequisito(r: Restriccion): Boolean = {
-true
-  }
+  def velocidad = statsConIncrementos.velocidad
+
+  def cambiarHP(valor : Int) = copy(stats = stats.cambiarHP(valor))
+  def cambiarFuerza(valor: Int) = copy(stats = stats.cambiarFuerza(valor))
+  def cambiarInteligencia(valor: Int) = copy(stats = stats.cambiarInteligencia(valor))
+  //def velocidad: Int = stats.velocidad + trabajo.incrementos.velocidad + equipamiento.incrementoVelocidad
+
+  //def inteligencia: Int = stats.inteligencia + trabajo.incrementos.inteligencia + equipamiento.incrementoInteligencia
+
+  //def fuerza: Int = stats.fuerza + trabajo.incrementos.fuerza + equipamiento.incrementoFuerza
+
+  def convertirseEn(nuevoTrabajo: Trabajo): Heroe = copy(trabajo = Some(nuevoTrabajo))
+
+  def equiparseCon(item: Item): Heroe =
+    copy(equipamiento = equipamiento.agregarItem(item))
+
+
+  def renunciar = copy(trabajo = None)
+
+  def setStat(stat: Stats) = copy(stats = stat)
 }
+  //==========================================================================
+  // Trabajo
+  //==========================================================================
 
-class Inventario(heroe: Heroe) extends mutable.HashMap[TipoItem.Tipo, Array[Item]] {
 
-  def initInventario: Inventario = {
-    TipoItem.values.foreach(i => this (i) = Array())
-    this
-  }
-
-  override def addOne(elem: (Tipo, Array[Item])): Inventario.this.type = {
-    if (this (elem._1).isEmpty) {
-      this (elem._1) = elem._2
-    } else {
-      this (elem._1).foreach {
-        i =>
-          desequipar(i)
-          this.update(elem._1, elem._2)
-      }
-    }
-
-    equipar(this (elem._1).head)
-    this
-  }
-
-  def desequipar(item: Item): Unit = {
-    item.powerUps.foreach(p => heroe.stats.modificar(p, Stats.decrementar(p.valor)))
-  }
-
-  def equipar(item: Item): Unit = {
-    item.powerUps.foreach(p => heroe.stats.modificar(p, Stats.incrementar(p.valor)))
-  }
-
-  def agregarAInventario(item: Item): Unit = item.tipo match {
-    case TipoItem.Talisman => this (item.tipo) = Array(item)
-    case _ => this.addOne((item.tipo, Array(item)))
-  }
-}
-
-class Trabajo(nombre: String, val statPrincipal: TipoStat.Nombre, val powerUps: Array[Stat]) {
-
-  def quedarEfectivo(heroe: Heroe): Unit = {
-    //    heroe.
-  }
-}
-
-class Restriccion {
-  def cumpleRestriccion(heroe: Heroe): Boolean = {
-    true
-  }
-}
+  //==========================================================================
+  // Inventario
+  //==========================================================================

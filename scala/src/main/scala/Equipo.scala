@@ -1,3 +1,4 @@
+/*
 class Equipo(miembros: List[Heroe]) {
 
   def realizarMision(mision: Mision): Boolean = {
@@ -52,3 +53,4 @@ class Equipo(miembros: List[Heroe]) {
 
   def obtenerRecompensa(value: Any)
 }
+*/

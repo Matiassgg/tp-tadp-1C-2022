@@ -1,8 +1,24 @@
 //==========================================================================
-// HEROE
+// STATS
 //==========================================================================
-case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restriccion: Heroe => Boolean) {
+
+//case class Incremento (HP: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
+case class Stats (HP: Int, inteligencia: Int, fuerza: Int, velocidad: Int) {
+  require(HP > 1, "HP debe ser mayor a 1")
+  require(inteligencia > 1, "inteligencia debe ser mayor a 1")
+  require(fuerza > 1, "fuerza debe ser mayor a 1")
+  require(velocidad > 1, "velocidad debe ser mayor a 1")
+
+  def sumarAtributo(v1: Int, v2: Int) = (v1+v2).max(1)
+
+  def cambiarHP(valor: Int) = copy(HP= sumarAtributo(HP, valor))
+  def cambiarFuerza(valor: Int) = copy(fuerza= sumarAtributo(fuerza, valor))
+  def cambiarInteligencia(valor: Int) = copy(inteligencia= sumarAtributo(inteligencia, valor))
 }
+
+//==========================================================================
+// TRABAJO
+//==========================================================================
 
 trait Trabajo {
   def statPrincipal: Heroe => Int
@@ -26,23 +42,12 @@ case object Ladron extends Trabajo {
 //
 //}
 
+//==========================================================================
+// ITEMS Y EQUIPAMIENTOS
+//==========================================================================
 
-//case class Incremento (HP: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
-case class Stats (HP: Int, inteligencia: Int, fuerza: Int, velocidad: Int) {
-  require(HP > 1, "HP debe ser mayor a 1")
-  require(inteligencia > 1, "inteligencia debe ser mayor a 1")
-  require(fuerza > 1, "fuerza debe ser mayor a 1")
-  require(velocidad > 1, "velocidad debe ser mayor a 1")
-
-  def sumarAtributo(v1: Int, v2: Int) = (v1+v2).max(1)
-
-  def cambiarHP(valor: Int) = copy(HP= sumarAtributo(HP, valor))
-  def cambiarFuerza(valor: Int) = copy(fuerza= sumarAtributo(fuerza, valor))
-  def cambiarInteligencia(valor: Int) = copy(inteligencia= sumarAtributo(inteligencia, valor))
+case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restriccion: Heroe => Boolean) {
 }
-
-
-
 
 sealed trait CuerpoHeroe
 case object Cabeza extends CuerpoHeroe
@@ -75,6 +80,10 @@ case class Equipamiento(
 
   def calcularIncrementos(heroe: Heroe): Heroe = ???
 }
+
+//==========================================================================
+// HEROE
+//==========================================================================
 
 case class Heroe(stats: Stats, inventario : List[Item], equipamiento: Equipamiento, trabajo : Option[Trabajo]) {
 

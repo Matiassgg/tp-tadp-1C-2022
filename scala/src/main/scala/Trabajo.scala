@@ -1,3 +1,4 @@
+/*
 
 class Trabajo(val statPrincipal: Stat, val incrementos: Incrementos) {
 
@@ -11,3 +12,4 @@ case class Incrementos (
                        )
 
 class Efecto(var operacion: Int => Int, var stat: Stat)
+*/

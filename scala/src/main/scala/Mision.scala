@@ -1,3 +1,4 @@
+/*
 class Mision(tareas: List[Tarea]) {
 
 }
@@ -22,3 +23,4 @@ class Tarea(nombre: String, consecuencia: List[Efecto], restricciones: List[Rest
     5
   }
 }
+*/

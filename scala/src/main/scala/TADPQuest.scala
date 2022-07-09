@@ -1,3 +1,7 @@
+
+
+object TADPQuest {
+
 //==========================================================================
 // STATS
 //==========================================================================
@@ -214,4 +218,7 @@ case class Heroe(stats: Stats, inventario: Inventario, trabajo : Option[Trabajo]
 case class Equipo(integrantes: Set[Heroe]){ // List entiendo que acepta repetidos, no se.
 
   def mejorHeroeSegun(cuantificador: Heroe => Int): Heroe = integrantes.reduce((a, b) => if(cuantificador(a) > cuantificador(b)) a else b)
+}
+
+
 }

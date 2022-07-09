@@ -7,10 +7,10 @@ class ProjectSpec extends AnyFreeSpec {
 
     "Tests de stats" - {
       "Se pueden crear stats" in {
-        val hp: HP = HP(10)
-        val inteligencia: Inteligencia = Inteligencia(10)
-        val velocidad: Velocidad = Velocidad(29)
-        val fuerza: Fuerza = Fuerza(29)
+        val hp: Int = HP(10)
+        val inteligencia: Int = Inteligencia(10)
+        val velocidad: Int = Velocidad(29)
+        val fuerza: Int = Fuerza(29)
         val stats: Stats = Stats(hp, inteligencia, velocidad, fuerza)
         stats.HP.value shouldBe 10
       }

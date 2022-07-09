@@ -39,10 +39,6 @@ case object Ladron extends Trabajo {
   def statPrincipal: Heroe => Int = _.stats.velocidad
 }
 
-//class Trabajo(val statPrincipal: Int, clase: TipoTrabajo, val incrementos: Incrementos) {
-//
-//}
-
 //==========================================================================
 // ITEMS Y EQUIPAMIENTOS
 //==========================================================================
@@ -59,7 +55,7 @@ case object Torso extends CuerpoHeroe
 case object Mano extends CuerpoHeroe
 case object Talisman extends CuerpoHeroe  // Tal vez Cuello en vez de Talisman
 
-case class Equipamiento(
+case class Inventario(
                   cabeza: Item,
                   torso: Item,
                   manos: List[Item],
@@ -67,7 +63,7 @@ case class Equipamiento(
                   ){
   require(manos.size <= 2, "Solo hay dos manos!")
 
-  def agregarItem(item: Item) : Equipamiento = {
+  def agregarItem(item: Item) : Inventario = {
 
     item.cuerpoHeroe match {
       case Cabeza => copy(cabeza = item)
@@ -129,7 +125,7 @@ case class Equipamiento(
 // HEROE
 //==========================================================================
 
-case class Heroe(stats: Stats, inventario : List[Item], equipamiento: Equipamiento, trabajo : Option[Trabajo]) {
+case class Heroe(stats: Stats, inventario: Inventario, trabajo : Option[Trabajo]) {
 
   val statPrincipal: Int = trabajo.map(_.statPrincipal(this)).getOrElse(0)
   def statsConIncrementos: Stats = {
@@ -138,7 +134,7 @@ case class Heroe(stats: Stats, inventario : List[Item], equipamiento: Equipamien
       case None => this
     }
 
-    equipamiento.calcularIncrementos(heroeConIncrementos).stats
+    inventario.calcularIncrementos(heroeConIncrementos).stats
   }
 
   //Stats Getters
@@ -158,18 +154,18 @@ case class Heroe(stats: Stats, inventario : List[Item], equipamiento: Equipamien
 
   def equiparseCon(item: Item): Heroe =
     if (item.restricciones.forall( r => r(this)))
-      copy (equipamiento = equipamiento.agregarItem (item) )
+      copy (inventario = inventario.agregarItem (item) )
     else this
 
   def renunciar = copy(trabajo = None)
 
   def setStat(stat: Stats) = copy(stats = stat)
 }
-  //==========================================================================
-  // Trabajo
-  //==========================================================================
 
+//==========================================================================
+// Equipo
+//==========================================================================
 
-  //==========================================================================
-  // Inventario
-  //==========================================================================
+case class Equipo(integrantes: Set[Heroe]){
+
+}

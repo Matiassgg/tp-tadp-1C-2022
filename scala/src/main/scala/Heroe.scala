@@ -40,20 +40,39 @@ case object Ladron extends Trabajo {
 }
 
 //==========================================================================
-// ITEMS Y EQUIPAMIENTOS
+// ITEMS
 //==========================================================================
 
 type Restriccion = Heroe => Boolean
 
-case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restricciones: List[Restriccion], dosManos: Boolean) {
-  require(!(dosManos && !(cuerpoHeroe == Mano)), "Como va a requerir dos manos si no es un item para manos!")
+case class Item(zonaEquipamiento: ZonaEquipamiento, incrementos: Incrementos, restricciones: List[Restriccion] = List(), dosManos: Boolean = false) {
+  require(!(dosManos && !(zonaEquipamiento == Mano)), "Como va a requerir dos manos si no es un item para manos!")
 }
 
-sealed trait CuerpoHeroe
-case object Cabeza extends CuerpoHeroe
-case object Torso extends CuerpoHeroe
-case object Mano extends CuerpoHeroe
-case object Talisman extends CuerpoHeroe  // Tal vez Cuello en vez de Talisman
+case object CascoVikingo extends Item(Cabeza, Incrementos(10,0,0,0), List(((h: Heroe) => h.fuerzaBase > 30)))
+case object PalitoMagico extends Item(Mano, Incrementos(0,20,0,0), List(((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))))
+case object ArmaduraEleganteSport extends Item(Torso, Incrementos(-30,0,0,30))
+case object ArcoViejo extends Item(Mano, Incrementos(0,0,2,0), List(), true)
+case object EscudoAntiRobo extends Item(Mano, Incrementos(20,0,0,0), List( (h: Heroe) => !h.esLadron, (h: Heroe) => h.fuerzaBase > 20), false)
+case object TalismanDeDedicacion extends Item(Talisman, Incrementos()) // TODO:  Todos los stats se incrementan 10% del valor del stat principal del trabajo.
+case object TalismanDelMinimalismo extends Item(Talisman, Incrementos(50)) // TODO: +50 hp. -10 hp por cada otro ítem equipado.
+
+// TODO: Si el héroe tiene más fuerza que inteligencia, +30 a la inteligencia; de lo contrario +10 a todos los stats menos la inteligencia.
+case object VinchaDelBufaloDeAgua extends Item(Cabeza, Incrementos(), List( (h: Heroe) => h.esDesempleado ))
+
+case object TalismanMaldito extends Item(Talisman, Incrementos()) // Reduce todos los stats a 1.
+
+case object EspadaDeLaVida extends Item(Mano, Incrementos()) // Hace que la fuerza del héroe sea igual a su hp.
+
+//==========================================================================
+// INVENTARIO
+//==========================================================================
+
+sealed trait ZonaEquipamiento
+case object Cabeza extends ZonaEquipamiento
+case object Torso extends ZonaEquipamiento
+case object Mano extends ZonaEquipamiento
+case object Talisman extends ZonaEquipamiento  // Tal vez Cuello en vez de Talisman
 
 case class Inventario(
                   cabeza: Item,
@@ -65,7 +84,7 @@ case class Inventario(
 
   def agregarItem(item: Item) : Inventario = {
 
-    item.cuerpoHeroe match {
+    item.zonaEquipamiento match {
       case Cabeza => copy(cabeza = item)
       case Torso => copy(torso = item)
       case Mano => item.dosManos match {
@@ -137,7 +156,13 @@ case class Heroe(stats: Stats, inventario: Inventario, trabajo : Option[Trabajo]
     inventario.calcularIncrementos(heroeConIncrementos).stats
   }
 
-  //Stats Getters
+  //Stats base
+  def hpBase = stats.HP
+  def fuerzaBase = stats.fuerza
+  def velocidadBase = stats.velocidad
+  def inteligenciaBase = stats.inteligencia
+
+  //Stats con buffs
   def HP = statsConIncrementos.HP
   def velocidad = statsConIncrementos.velocidad
   def inteligencia = statsConIncrementos.inteligencia
@@ -160,6 +185,26 @@ case class Heroe(stats: Stats, inventario: Inventario, trabajo : Option[Trabajo]
   def renunciar = copy(trabajo = None)
 
   def setStat(stat: Stats) = copy(stats = stat)
+
+  def esMago = trabajo match {
+    case Some(Mago) => true
+    case _ => false
+  }
+
+  def esGuerrero = trabajo match {
+    case Some(Guerrero) => true
+    case _ => false
+  }
+
+  def esLadron = trabajo match {
+    case Some(Ladron) => true
+    case _ => false
+  }
+
+  def esDesempleado = trabajo match {
+    case None => true
+    case _ => false
+  }
 }
 
 //==========================================================================

@@ -2,7 +2,8 @@
 // STATS
 //==========================================================================
 
-//case class Incremento (HP: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
+case class Incrementos (HP: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
+
 case class Stats (HP: Int, inteligencia: Int, fuerza: Int, velocidad: Int) {
   require(HP > 1, "HP debe ser mayor a 1")
   require(inteligencia > 1, "inteligencia debe ser mayor a 1")
@@ -10,10 +11,10 @@ case class Stats (HP: Int, inteligencia: Int, fuerza: Int, velocidad: Int) {
   require(velocidad > 1, "velocidad debe ser mayor a 1")
 
   def sumarAtributo(v1: Int, v2: Int) = (v1+v2).max(1)
-
   def cambiarHP(valor: Int) = copy(HP= sumarAtributo(HP, valor))
   def cambiarFuerza(valor: Int) = copy(fuerza= sumarAtributo(fuerza, valor))
   def cambiarInteligencia(valor: Int) = copy(inteligencia= sumarAtributo(inteligencia, valor))
+  def cambiarVelocidad(valor: Int) = copy(velocidad= sumarAtributo(velocidad, valor))
 }
 
 //==========================================================================
@@ -46,7 +47,10 @@ case object Ladron extends Trabajo {
 // ITEMS Y EQUIPAMIENTOS
 //==========================================================================
 
-case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restriccion: Heroe => Boolean) {
+type Restriccion = Heroe => Boolean
+
+case class Item(cuerpoHeroe: CuerpoHeroe, incrementos: Incrementos, restricciones: List[Restriccion], dosManos: Boolean) {
+  require(!(dosManos && !(cuerpoHeroe == Mano)), "Como va a requerir dos manos si no es un item para manos!")
 }
 
 sealed trait CuerpoHeroe
@@ -64,13 +68,50 @@ case class Equipamiento(
   require(manos.size <= 2, "Solo hay dos manos!")
 
   def agregarItem(item: Item) : Equipamiento = {
+
     item.cuerpoHeroe match {
       case Cabeza => copy(cabeza = item)
       case Torso => copy(torso = item)
-      case Mano => copy(manos = manos.tail.appended(item)) // ver tema de armas que  ocupan dos manos
+      case Mano => item.dosManos match {
+        case true => copy(manos = List(item))
+        case false => {
+          manos.head.dosManos match {
+            case true => copy(manos = List(item))
+            case false => if(manos.size == 2) copy(manos = manos.tail.appended(item)) else copy(manos = manos.appended(item))
+          }
+        }
+      }
       case Talisman => copy(talismanes = talismanes.appended(item))
     }
   }
+
+/*  case class Equipamiento(
+                  cabeza: Option[Item],
+                  torso: Option[Item],
+                  manoIzq: Option[Item],
+                  manoDer: Option[Item],
+                  ambasManos: Option[Item],
+                  talismanes: List[Item]
+                  ){
+    require(!((ambasManos != None && manoDer == None && manoIzq == None)), "Si ambasManos tiene valores, manoDer y manoIzq no pueden tenerlos")
+    require(!((manoDer != None || manoIzq != None) && ambasManos == None), "Si alguna mano tiene valores, ambasManos debe ser None")
+
+  def agregarItem(item: Item) : Equipamiento = {
+
+    item.cuerpoHeroe match {
+      case Cabeza => copy(cabeza = Some(item))
+      case Torso => copy(torso = Some(item))
+      case Mano => item.dosManos match {
+        case true => {
+          copy(ambasManos = Some(item), manoIzq = None, manoDer = None)
+        }
+        case false => {
+
+        }
+      } // ver tema de armas que  ocupan dos manos
+      case Talisman => copy(talismanes = talismanes.appended(item))
+    }
+  }*/
 
   def items : List[Item] = List(List(cabeza, torso), manos, talismanes).flatten
   def incrementoHP: Int = items.map(item=>item.incrementos.HP).sum
@@ -78,7 +119,10 @@ case class Equipamiento(
   def incrementoInteligencia: Int = items.map(item=>item.incrementos.inteligencia).sum
   def incrementoFuerza: Int = items.map(item=>item.incrementos.fuerza).sum
 
-  def calcularIncrementos(heroe: Heroe): Heroe = ???
+  def calcularIncrementos(heroe: Heroe): Heroe = heroe.cambiarHP(incrementoHP)
+                                                      .cambiarVelocidad(incrementoVelocidad)
+                                                      .cambiarFuerza(incrementoFuerza)
+                                                      .cambiarInteligencia(incrementoInteligencia)
 }
 
 //==========================================================================
@@ -96,25 +140,26 @@ case class Heroe(stats: Stats, inventario : List[Item], equipamiento: Equipamien
 
     equipamiento.calcularIncrementos(heroeConIncrementos).stats
   }
+
+  //Stats Getters
   def HP = statsConIncrementos.HP
-  //def HP: Int = stats.HP + trabajo.incrementos.HP + equipamiento.incrementoHP
-
   def velocidad = statsConIncrementos.velocidad
+  def inteligencia = statsConIncrementos.inteligencia
+  def fuerza = statsConIncrementos.fuerza
 
+  //Stats Setters
   def cambiarHP(valor : Int) = copy(stats = stats.cambiarHP(valor))
   def cambiarFuerza(valor: Int) = copy(stats = stats.cambiarFuerza(valor))
   def cambiarInteligencia(valor: Int) = copy(stats = stats.cambiarInteligencia(valor))
-  //def velocidad: Int = stats.velocidad + trabajo.incrementos.velocidad + equipamiento.incrementoVelocidad
+  def cambiarVelocidad(valor: Int) = copy(stats = stats.cambiarVelocidad(valor))
 
-  //def inteligencia: Int = stats.inteligencia + trabajo.incrementos.inteligencia + equipamiento.incrementoInteligencia
-
-  //def fuerza: Int = stats.fuerza + trabajo.incrementos.fuerza + equipamiento.incrementoFuerza
 
   def convertirseEn(nuevoTrabajo: Trabajo): Heroe = copy(trabajo = Some(nuevoTrabajo))
 
   def equiparseCon(item: Item): Heroe =
-    copy(equipamiento = equipamiento.agregarItem(item))
-
+    if (item.restricciones.forall( r => r(this)))
+      copy (equipamiento = equipamiento.agregarItem (item) )
+    else this
 
   def renunciar = copy(trabajo = None)
 

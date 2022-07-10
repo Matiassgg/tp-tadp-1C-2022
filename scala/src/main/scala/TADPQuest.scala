@@ -161,13 +161,13 @@ object TADPQuest {
       item.zonaEquipamiento match {
         case Cabeza => copy(cabeza = item)
         case Torso => copy(torso = item)
-        case Mano => item.dosManos match {
-          case true => copy(manos = List(item))
-          case false => {
-            manos.head.dosManos match {
-              case true => copy(manos = List(item))
-              case false => if(manos.size == 2) copy(manos = manos.tail.appended(item)) else copy(manos = manos.appended(item))
-            }
+        case Mano => if (item.dosManos) {
+          copy(manos = List(item))
+        } else {
+          if (manos.head.dosManos) {
+            copy(manos = List(item))
+          } else {
+            if (manos.size == 2) copy(manos = manos.tail.appended(item)) else copy(manos = manos.appended(item))
           }
         }
         case Talisman => copy(talismanes = talismanes.appended(item))
@@ -316,39 +316,75 @@ object TADPQuest {
     }
 
     def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
+
   }
 
   //==========================================================================
   // Misiones
   //==========================================================================
-  case class Tarea (facilidad : Equipo => Int, efecto : Heroe => Heroe) {
 
-    // ni idea
-    def realizar(heroe : Heroe) : Tarea = {
-      copy()
-    }
+  type Facilidad = Equipo => Int
 
-
+  abstract case class Tarea (var completada : Boolean = false) {
+    def realizarPor(equipo: Equipo): Tarea = ???
+    // TODO: Como implementar la facilidad de una tarea?
+    // Siempre depende del equipo, pero en algunos casos también depende del heroe
+    // Revisar esta firma de abajo, ya que toma la facilidad como si fuera propia del equipo, cuando puede ser del heroe que realice la tarea
+    // Recordar que la facilidad puede no existir
+    def getFacilidad(equipo : Equipo) : Int
+    def efectoEnElHeroe(heroe : Heroe) : Heroe
 
   }
 
+  // tiene una facilidad de 10 para cualquier héroe o 20 si el líder del equipo es un guerrero
   case object pelearContraMonstruo extends Tarea {
-    def realizar(heroe : Heroe)= {
-      // insertar logica de la tarea
-      heroe
+    override def efectoEnElHeroe(heroe: Heroe): Heroe = {
+      if (heroe.fuerza < 20) heroe.cambiarHP(heroe.HP - 5) else heroe
+    }
+
+    // en este caso depende del equipo solamente
+    override def getFacilidad(equipo: Equipo): Int = {
+      if (equipo.lider.get.esGuerrero) 20 else 10
     }
   }
 
-  case class Mision(tareas : List[Tarea], estado : String, recompensa : Equipo) {
+  case object forzarPuerta extends Tarea {
+    override def efectoEnElHeroe(heroe: Heroe): Heroe = {
+      ???
+    }
 
+    // en este caso depende del heroe
+    override def getFacilidad(equipo: Equipo): Int = {
+      ???
+    }
   }
 
+  case object robarTalisman extends Tarea {
+    override def efectoEnElHeroe(heroe: Heroe): Heroe = {
+      ???
+    }
 
+    // en este caso depende del heroe y del equipo
+    override def getFacilidad(equipo: Equipo): Int = {
+      ???
+    }
+  }
+
+  case class Mision(tareas: List[Tarea], completada: Boolean = false, recompensa: Equipo => Equipo) {
+    def realizarPor(equipo: Equipo): Mision = {
+      val tareasSinRealizar: List[Tarea] = tareas
+      tareas.foreach(tarea => tarea.realizarPor(equipo))
+      if (tareas.forall(tarea => tarea.completada)) completar() else copy(tareas = tareasSinRealizar)
+    }
+
+    def completar(): Mision = {
+      copy(completada = true)
+    }
+  }
 
   //==========================================================================
   // La Taberna
   //==========================================================================
-
 
 
 }

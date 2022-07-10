@@ -295,7 +295,7 @@ object TADPQuest {
     def mejorHeroeSegun(cuantificador: Heroe => Int): Option[Heroe] = integrantes.reduceOption((h1,h2) => if(cuantificador(h1) > cuantificador(h2)) h1 else h2)
 
     def obtenerItem(item: Item): Equipo = {
-      implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : = integrante.statPrincipal - integrante.equiparseCon(item).statPrincipal
+      implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.statPrincipal - integrante.equiparseCon(item).statPrincipal
       val integrantesBeneficiados = integrantes.filter(integrante => diferenciaStatPrincipal(integrante, item) > 0)
 
       if (integrantesBeneficiados.nonEmpty) {
@@ -317,5 +317,38 @@ object TADPQuest {
 
     def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
   }
+
+  //==========================================================================
+  // Misiones
+  //==========================================================================
+  case class Tarea (facilidad : Equipo => Int, efecto : Heroe => Heroe) {
+
+    // ni idea
+    def realizar(heroe : Heroe) : Tarea = {
+      copy()
+    }
+
+
+
+  }
+
+  case object pelearContraMonstruo extends Tarea {
+    def realizar(heroe : Heroe)= {
+      // insertar logica de la tarea
+      heroe
+    }
+  }
+
+  case class Mision(tareas : List[Tarea], estado : String, recompensa : Equipo) {
+
+  }
+
+
+
+  //==========================================================================
+  // La Taberna
+  //==========================================================================
+
+
 
 }

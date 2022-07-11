@@ -179,16 +179,8 @@ object TADPQuest {
     }
 
     def items : List[Item] = List(List(cabeza, torso), manos, talismanes).flatten
-/*    def incrementoHP(h: Heroe): Int = items.map(item => item.getIncrementos(h).HP).sum
-    def incrementoVelocidad(h: Heroe): Int = items.map(item => item.getIncrementos(h).velocidad).sum
-    def incrementoInteligencia(h: Heroe): Int = items.map(item => item.getIncrementos(h).inteligencia).sum
-    def incrementoFuerza(h: Heroe): Int = items.map(item => item.getIncrementos(h).fuerza).sum
 
-    def calcularIncrementos(heroe: Heroe): Heroe = heroe.cambiarHP(incrementoHP(heroe))
-                                                        .cambiarVelocidad(incrementoVelocidad(heroe))
-                                                        .cambiarFuerza(incrementoFuerza(heroe))
-                                                        .cambiarInteligencia(incrementoInteligencia(heroe))*/
-
+    //Testear si funca el fold
     def calcularIncrementos(heroe: Heroe) = items.foldLeft(heroe)((buffedHeroe, item) => item.aplicarEfectoAHeroe(buffedHeroe))
   }
 

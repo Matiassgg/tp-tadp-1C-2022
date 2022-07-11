@@ -16,6 +16,11 @@ object TADPQuest {
     def cambiarFuerza(valor: Int) : Stats = copy(fuerza = sumarAtributo(fuerza, valor))
     def cambiarInteligencia(valor: Int) : Stats = copy(inteligencia = sumarAtributo(inteligencia, valor))
     def cambiarVelocidad(valor: Int) : Stats = copy(velocidad = sumarAtributo(velocidad, valor))
+
+    def recalcularStats(incrementos: Incrementos) = copy(HP = HP + incrementos.HP,
+                                                               inteligencia = inteligencia + incrementos.inteligencia,
+                                                               fuerza = fuerza + incrementos.fuerza,
+                                                               velocidad = velocidad + incrementos.velocidad)
   }
 
   //==========================================================================
@@ -46,6 +51,7 @@ object TADPQuest {
 
   type Restriccion = Heroe => Boolean
 
+  // Primer approach
     /*
     case class Item(zonaEquipamiento: ZonaEquipamiento, incrementos: Incrementos, restricciones: List[Restriccion] = List(), dosManos: Boolean = false) {
       require(!(dosManos && !(zonaEquipamiento == Mano)), "Como va a requerir dos manos si no es un item para manos!")
@@ -67,7 +73,10 @@ object TADPQuest {
       case object EspadaDeLaVida extends Item(Mano, Incrementos()) // Hace que la fuerza del héroe sea igual a su hp.
       */
 
-    abstract case class Item(zonaEquipamiento: ZonaEquipamiento, restricciones: List[Restriccion] = List(), dosManos: Boolean = false, valorVenta: Int = 0) {
+
+  // Segundo approach
+
+/*    abstract case class Item(zonaEquipamiento: ZonaEquipamiento, restricciones: List[Restriccion] = List(), dosManos: Boolean = false, valorVenta: Int = 0) {
       require(!(dosManos && !(zonaEquipamiento == Mano)), "Como va a requerir dos manos si no es un item para manos!")
       def getIncrementos(heroe : Heroe) : Incrementos
     }
@@ -135,8 +144,77 @@ object TADPQuest {
       override def getIncrementos(_heroe: Heroe): Incrementos = {
         Incrementos(20,0,0,0)
       }
-    }
+    }*/
 
+// Nuevo approach
+  abstract case class Item(zonaEquipamiento: ZonaEquipamiento, restricciones: List[Restriccion] = List(), dosManos: Boolean = false, valorVenta: Int = 0) {
+    require(!(dosManos && !(zonaEquipamiento == Mano)), "Como va a requerir dos manos si no es un item para manos!")
+
+    def getStatsModificados(heroe : Heroe) : Stats
+
+    def aplicarEfectoAHeroe(heroe: Heroe): Heroe = heroe.setStat(getStatsModificados(heroe))
+  }
+
+  case object TalismanDeDedicacion extends Item(Talisman,List.empty) {
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt))
+    }
+  }
+
+  case object TalismanDelMinimalismo extends Item(Talisman,List.empty) {
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
+    }
+  }
+
+  case object VinchaDelBufaloDeAgua extends Item(Cabeza, List( (h: Heroe) => h.esDesempleado )){
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      val incrementos = if(heroe.fuerzaBase > heroe.inteligenciaBase) Incrementos(0,30,0,0) else Incrementos(10,0,10,10)
+      heroe.stats.recalcularStats(incrementos)
+    }
+  }
+
+  case object TalismanMaldito extends Item(Talisman) {
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      Stats(1,1,1,1)
+    }
+  }
+
+  case object EspadaDeLaVida extends Item(Mano) {
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
+    }
+  }
+
+  case object CascoVikingo extends Item(Cabeza, List((h: Heroe) => h.fuerzaBase > 30)){
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(10,0,0,0))
+    }
+  }
+
+  case object PalitoMagico extends Item(Mano, List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))){
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(0,20,0,0))
+    }
+  }
+
+  case object ArmaduraEleganteSport extends Item(Torso){
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
+    }
+  }
+
+  case object ArcoViejo extends Item(Mano, List(), true){
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(0,0,2,0))
+    }
+  }
+
+  case object EscudoAntiRobo extends Item(Mano, List( (h: Heroe) => !h.esLadron, (h: Heroe) => h.fuerzaBase > 20), false){
+    override def getStatsModificados(heroe: Heroe): Stats = {
+      heroe.stats.recalcularStats(Incrementos(20,0,0,0))
+    }
+  }
 
   //==========================================================================
   // INVENTARIO
@@ -174,36 +252,8 @@ object TADPQuest {
       }
     }
 
-  /*  case class Equipamiento(
-                    cabeza: Option[Item],
-                    torso: Option[Item],
-                    manoIzq: Option[Item],
-                    manoDer: Option[Item],
-                    ambasManos: Option[Item],
-                    talismanes: List[Item]
-                    ){
-      require(!((ambasManos != None && manoDer == None && manoIzq == None)), "Si ambasManos tiene valores, manoDer y manoIzq no pueden tenerlos")
-      require(!((manoDer != None || manoIzq != None) && ambasManos == None), "Si alguna mano tiene valores, ambasManos debe ser None")
-
-    def agregarItem(item: Item) : Equipamiento = {
-
-      item.cuerpoHeroe match {
-        case Cabeza => copy(cabeza = Some(item))
-        case Torso => copy(torso = Some(item))
-        case Mano => item.dosManos match {
-          case true => {
-            copy(ambasManos = Some(item), manoIzq = None, manoDer = None)
-          }
-          case false => {
-
-          }
-        } // ver tema de armas que  ocupan dos manos
-        case Talisman => copy(talismanes = talismanes.appended(item))
-      }
-    }*/
-
     def items : List[Item] = List(List(cabeza, torso), manos, talismanes).flatten
-    def incrementoHP(h: Heroe): Int = items.map(item => item.getIncrementos(h).HP).sum
+/*    def incrementoHP(h: Heroe): Int = items.map(item => item.getIncrementos(h).HP).sum
     def incrementoVelocidad(h: Heroe): Int = items.map(item => item.getIncrementos(h).velocidad).sum
     def incrementoInteligencia(h: Heroe): Int = items.map(item => item.getIncrementos(h).inteligencia).sum
     def incrementoFuerza(h: Heroe): Int = items.map(item => item.getIncrementos(h).fuerza).sum
@@ -211,9 +261,12 @@ object TADPQuest {
     def calcularIncrementos(heroe: Heroe): Heroe = heroe.cambiarHP(incrementoHP(heroe))
                                                         .cambiarVelocidad(incrementoVelocidad(heroe))
                                                         .cambiarFuerza(incrementoFuerza(heroe))
-                                                        .cambiarInteligencia(incrementoInteligencia(heroe))
+                                                        .cambiarInteligencia(incrementoInteligencia(heroe))*/
+
+    def calcularIncrementos(heroe: Heroe) = items.foldLeft(heroe)((buffedHeroe, item) => item.aplicarEfectoAHeroe(buffedHeroe))
   }
 
+  List(1,2,3,4).sum
   //==========================================================================
   // HEROE
   //==========================================================================

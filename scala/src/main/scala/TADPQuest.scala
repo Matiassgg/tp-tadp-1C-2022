@@ -212,7 +212,7 @@ object TADPQuest {
     def items : List[Item] = List(List(cabeza, torso), manos, talismanes).flatten
 
     //Testear si funca el fold
-    def calcularIncrementos(heroe: Heroe) = items.foldLeft(heroe)((buffedHeroe, item) => item.aplicarEfectoAHeroe(buffedHeroe))
+    def calcularIncrementos(heroe: Heroe) = items.foldLeft(heroe)((buffedHero, item) => item.aplicarEfectoAHeroe(buffedHero))
   }
 
   List(1,2,3,4).sum

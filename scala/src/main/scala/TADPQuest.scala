@@ -1,5 +1,3 @@
-import scala.collection.immutable.IntMap
-
 object TADPQuest {
   //==========================================================================
   // STATS

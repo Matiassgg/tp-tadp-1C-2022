@@ -17,7 +17,7 @@ class ProjectSpec extends AnyFreeSpec {
     "Tests de stats" - {
       "Se pueden crear stats" in {
         val stats: Stats = Stats(10,5,10,80)
-        stats shouldNot be null
+        stats should not be null
       }
 
       "No se pueden crear stats negativos" in {

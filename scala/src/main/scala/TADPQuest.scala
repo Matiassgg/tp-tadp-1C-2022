@@ -1,3 +1,5 @@
+import scala.collection.immutable.IntMap
+
 object TADPQuest {
   //==========================================================================
   // STATS
@@ -73,70 +75,101 @@ object TADPQuest {
       case object EspadaDeLaVida extends Item(Mano, Incrementos()) // Hace que la fuerza del héroe sea igual a su hp.
       */
 
-  abstract case class Item(zonaEquipamiento: ZonaEquipamiento, restricciones: List[Restriccion] = List(), dosManos: Boolean = false, valorVenta: Int = 0) {
-    require(!(dosManos && !(zonaEquipamiento == Mano)), "Como va a requerir dos manos si no es un item para manos!")
+  sealed trait Item {
+    def zonaEquipamiento: ZonaEquipamiento
+    def restricciones: List[Restriccion] = List.empty
+    def dosManos: Boolean = false
+    def valorVenta: Int = 0
 
     def getStatsModificados(heroe : Heroe) : Stats
 
     def aplicarEfectoAHeroe(heroe: Heroe): Heroe = heroe.setStat(getStatsModificados(heroe))
   }
 
-  case object TalismanDeDedicacion extends Item(Talisman,List.empty) {
+  case object TalismanDeDedicacion extends Item {
+    lazy val zonaEquipamiento = Talisman
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt))
     }
   }
 
-  case object TalismanDelMinimalismo extends Item(Talisman,List.empty) {
+  case object TalismanDelMinimalismo extends Item {
+    lazy val zonaEquipamiento = Talisman
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
     }
   }
 
-  case object VinchaDelBufaloDeAgua extends Item(Cabeza, List( (h: Heroe) => h.esDesempleado )){
+  case object VinchaDelBufaloDeAgua extends Item {
+    lazy val zonaEquipamiento = Cabeza
+    override def restricciones = List( (h: Heroe) => h.esDesempleado )
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       val incrementos = if(heroe.fuerzaBase > heroe.inteligenciaBase) Incrementos(0,30,0,0) else Incrementos(10,0,10,10)
       heroe.stats.recalcularStats(incrementos)
     }
   }
 
-  case object TalismanMaldito extends Item(Talisman) {
+  case object TalismanMaldito extends Item {
+    lazy val zonaEquipamiento = Talisman
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       Stats(1,1,1,1)
     }
   }
 
-  case object EspadaDeLaVida extends Item(Mano) {
+  case object EspadaDeLaVida extends Item {
+    lazy val zonaEquipamiento = Mano
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
     }
   }
 
-  case object CascoVikingo extends Item(Cabeza, List((h: Heroe) => h.fuerzaBase > 30)){
+  case object CascoVikingo extends Item {
+    lazy val zonaEquipamiento = Cabeza
+    override def restricciones = List( (h: Heroe) => h.fuerzaBase > 30)
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(10,0,0,0))
     }
   }
 
-  case object PalitoMagico extends Item(Mano, List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))){
+  case object PalitoMagico extends Item {
+    lazy val zonaEquipamiento = Mano
+
+    override def restricciones = List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(0,20,0,0))
     }
   }
 
-  case object ArmaduraEleganteSport extends Item(Torso){
+  case object ArmaduraEleganteSport extends Item{
+    lazy val zonaEquipamiento = Torso
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
     }
   }
 
-  case object ArcoViejo extends Item(Mano, List(), true){
+  case object ArcoViejo extends Item {
+    lazy val zonaEquipamiento = Mano
+
+    override def dosManos = true
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(0,0,2,0))
     }
   }
 
-  case object EscudoAntiRobo extends Item(Mano, List( (h: Heroe) => !h.esLadron, (h: Heroe) => h.fuerzaBase > 20), false){
+  case object EscudoAntiRobo extends Item {
+    lazy val zonaEquipamiento = Mano
+
+    override def restricciones = List( ( (h: Heroe) => !h.esLadron ), ( (h: Heroe) => h.fuerzaBase > 20 ) )
+
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(20,0,0,0))
     }
@@ -296,7 +329,10 @@ object TADPQuest {
 
   type Facilidad = Equipo => Int
 
-  abstract case class Tarea (var completada : Boolean = false) {
+  sealed trait Tarea {
+
+    def completada: Boolean = false
+
     def realizarPor(equipo: Equipo): Tarea = ???
     // TODO: Como implementar la facilidad de una tarea?
     // Siempre depende del equipo, pero en algunos casos también depende del heroe

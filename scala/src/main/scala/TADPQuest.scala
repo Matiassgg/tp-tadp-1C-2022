@@ -98,9 +98,7 @@ object TADPQuest {
   case object TalismanDelMinimalismo extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
   }
 
   case object VinchaDelBufaloDeAgua extends Item {
@@ -116,26 +114,20 @@ object TADPQuest {
   case object TalismanMaldito extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      Stats(1,1,1,1)
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = Stats(1,1,1,1)
   }
 
   case object EspadaDeLaVida extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento= Mano
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
   }
 
   case object CascoVikingo extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Cabeza
     override def restricciones = List( (h: Heroe) => h.fuerzaBase > 30)
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(10,0,0,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(10,0,0,0))
   }
 
   case object PalitoMagico extends Item {
@@ -143,17 +135,13 @@ object TADPQuest {
 
     override def restricciones = List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(0,20,0,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,20,0,0))
   }
 
   case object ArmaduraEleganteSport extends Item{
     lazy val zonaEquipamiento: ZonaEquipamiento = Torso
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
   }
 
   case object ArcoViejo extends Item {
@@ -161,9 +149,7 @@ object TADPQuest {
 
     override def dosManos = true
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(0,0,2,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,0,2,0))
   }
 
   case object EscudoAntiRobo extends Item {
@@ -265,6 +251,9 @@ object TADPQuest {
 
     def setStat(stat: Stats) : Heroe = copy(stats = stat)
 
+    //https://www.scala-lang.org/api/2.12.1/scala/Option.html#contains[A1%3E:A](elem:A1):Boolean
+    def es(t: Trabajo): Boolean = trabajo.contains(t)
+
     def esMago : Boolean = trabajo match {
       case Some(Mago) => true
       case _ => false
@@ -320,8 +309,12 @@ object TADPQuest {
       if (integrantes.count(_.statPrincipal == liderPotencial.map(_.statPrincipal).get) > 1) None else liderPotencial
     }
 
-    def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
+    lazy val trabajoDelLider: Option[Trabajo] = for {
+      lider <- lider
+      trabajo <- lider.trabajo
+    } yield trabajo
 
+    def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
   }
 
   //==========================================================================
@@ -339,7 +332,7 @@ object TADPQuest {
     // Siempre depende del equipo, pero en algunos casos también depende del heroe
     // Revisar esta firma de abajo, ya que toma la facilidad como si fuera propia del equipo, cuando puede ser del heroe que realice la tarea
     // Recordar que la facilidad puede no existir
-    def getFacilidad(equipo : Equipo, heroe : Heroe) : Int
+    def getFacilidad(equipo: Equipo, heroe: Heroe) : Int
     def efectoEnElHeroe(heroe : Heroe) : Heroe
 
   }
@@ -351,8 +344,9 @@ object TADPQuest {
     }
 
     // en este caso depende del equipo solamente
-    override def getFacilidad(equipo: Equipo, heroe : Heroe): Int = {
-      if (equipo.lider.get.esGuerrero) 20 else 10
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = equipo.trabajoDelLider match {
+      case Some(Guerrero) => 20
+      case _ => 10
     }
   }
 
@@ -362,9 +356,8 @@ object TADPQuest {
     }
 
     // en este caso depende del heroe
-    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = {
-      ???
-    }
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = 
+      heroe.inteligencia + 10 * equipo.integrantes.count(heroe => heroe.es(Ladron))
   }
 
   case object robarTalisman extends Tarea {
@@ -372,9 +365,10 @@ object TADPQuest {
       ???
     }
 
-    // en este caso depende del heroe y del equipo
-    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = {
-      ???
+    // “robar talismán” tiene facilidad igual a la velocidad del héroe, pero no puede ser hecho por equipos cuyo líder no sea un ladrón.
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = equipo.trabajoDelLider match {
+      case Some(Ladron) => heroe.velocidad
+      case _ => 99999999 // que pasa en este caso??? 
     }
   }
 

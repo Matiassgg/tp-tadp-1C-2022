@@ -308,6 +308,10 @@ object TADPQuest {
       val liderPotencial: Option[Heroe] = integrantes.reduceOption((h1,h2) => if(h1.statPrincipal > h2.statPrincipal) h1 else h2)
       if (integrantes.count(_.statPrincipal == liderPotencial.map(_.statPrincipal).get) > 1) None else liderPotencial
     }
+    lazy val trabajoDelLider: Option[Trabajo] = for {
+      lider <- lider()
+      trabajo <- lider.trabajo
+    } yield trabajo
 
     def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
 
@@ -340,8 +344,9 @@ object TADPQuest {
     }
 
     // en este caso depende del equipo solamente
-    override def getFacilidad(equipo: Equipo): Int = {
-      if (equipo.lider.get.esGuerrero) 20 else 10
+    override def getFacilidad(equipo: Equipo): Int = equipo.trabajoDelLider match {
+      case Some(Guerrero) => 20
+      case _ => 10
     }
   }
 

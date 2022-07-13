@@ -309,7 +309,7 @@ object TADPQuest {
       if (integrantes.count(_.statPrincipal == liderPotencial.map(_.statPrincipal).get) > 1) None else liderPotencial
     }
     lazy val trabajoDelLider: Option[Trabajo] = for {
-      lider <- lider()
+      lider <- lider
       trabajo <- lider.trabajo
     } yield trabajo
 

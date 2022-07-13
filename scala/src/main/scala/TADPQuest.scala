@@ -204,7 +204,6 @@ object TADPQuest {
     def calcularIncrementos(heroe: Heroe): Heroe = items.foldLeft(heroe)((buffedHero, item) => item.aplicarEfectoAHeroe(buffedHero))
   }
 
-  List(1,2,3,4).sum
   //==========================================================================
   // HEROE
   //==========================================================================

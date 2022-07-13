@@ -10,11 +10,12 @@ import TADPQuest.TalismanMaldito
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.freespec.AnyFreeSpec
 
-class ProjectSpec extends AnyFreeSpec {
+class TADPQuestSpec extends AnyFreeSpec {
 
   "TADPQuest Tests" - {
 
     "Tests de stats" - {
+
       "Se pueden crear stats" in {
         val stats: Stats = Stats(10,5,10,80)
         stats should not be null
@@ -29,7 +30,7 @@ class ProjectSpec extends AnyFreeSpec {
 
     "Tests de Heroe" - {
       val stats: Stats = Stats(10, 10, 29, 29)
-      val equipamiento: Equipamiento = Equipamiento(CascoVikingo, ArmaduraEleganteSport, List(EspadaDeLaVida), List(TalismanMaldito))
+      val equipamiento: Equipamiento = Equipamiento(CascoVikingo, ArmaduraEleganteSport, List(), List())
 
       "Tests de Trabajo" - {
         val heroeBase = Heroe(stats, List.empty, equipamiento, Some(Guerrero))
@@ -37,7 +38,7 @@ class ProjectSpec extends AnyFreeSpec {
         "El heroe puede cambiar de trabajo" in {
 
           val heroeLadron: Heroe = heroeBase.convertirseEn(Ladron)
-          heroeLadron.trabajo shouldBe Ladron
+          heroeLadron.trabajo shouldBe Some(Ladron)
         }
 
         "El heroe cambia sus stats al cambiar de trabajo" in {

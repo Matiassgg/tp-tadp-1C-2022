@@ -33,16 +33,22 @@ object TADPQuest {
   }
 
   case object Guerrero extends Trabajo {
-    def statPrincipal: Heroe => Int = _.fuerza
+    def statPrincipal: Heroe => Int = _.fuerzaBase
     override def aumentarStats: Heroe => Heroe = {
       super.aumentarStats andThen(_.cambiarHP(10).cambiarFuerza(15).cambiarInteligencia(-10))
     }
   }
   case object Mago extends Trabajo {
-    def statPrincipal: Heroe => Int = _.inteligencia
+    def statPrincipal: Heroe => Int = _.inteligenciaBase
+    override def aumentarStats: Heroe => Heroe = {
+      super.aumentarStats andThen(_.cambiarFuerza(-20).cambiarInteligencia(20))
+    }
   }
   case object Ladron extends Trabajo {
-    def statPrincipal: Heroe => Int = _.velocidad // Se toman los stats con incrementos
+    def statPrincipal: Heroe => Int = _.velocidadBase
+    override def aumentarStats: Heroe => Heroe = {
+      super.aumentarStats andThen(_.cambiarHP(-5).cambiarVelocidad(10))
+    }
   }
 
   //==========================================================================

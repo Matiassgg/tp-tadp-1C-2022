@@ -101,9 +101,7 @@ object TADPQuest {
   case object TalismanDelMinimalismo extends Item {
     lazy val zonaEquipamiento = Talisman
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
   }
 
   case object VinchaDelBufaloDeAgua extends Item {
@@ -119,26 +117,20 @@ object TADPQuest {
   case object TalismanMaldito extends Item {
     lazy val zonaEquipamiento = Talisman
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      Stats(1,1,1,1)
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = Stats(1,1,1,1)
   }
 
   case object EspadaDeLaVida extends Item {
     lazy val zonaEquipamiento = Mano
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
   }
 
   case object CascoVikingo extends Item {
     lazy val zonaEquipamiento = Cabeza
     override def restricciones = List( (h: Heroe) => h.fuerzaBase > 30)
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(10,0,0,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(10,0,0,0))
   }
 
   case object PalitoMagico extends Item {
@@ -146,17 +138,13 @@ object TADPQuest {
 
     override def restricciones = List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(0,20,0,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,20,0,0))
   }
 
   case object ArmaduraEleganteSport extends Item{
     lazy val zonaEquipamiento = Torso
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
   }
 
   case object ArcoViejo extends Item {
@@ -164,9 +152,7 @@ object TADPQuest {
 
     override def dosManos = true
 
-    override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(0,0,2,0))
-    }
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,0,2,0))
   }
 
   case object EscudoAntiRobo extends Item {

@@ -254,6 +254,9 @@ object TADPQuest {
 
     def setStat(stat: Stats) : Heroe = copy(stats = stat)
 
+    //https://www.scala-lang.org/api/2.12.1/scala/Option.html#contains[A1%3E:A](elem:A1):Boolean
+    def es(t: Trabajo): Boolean = trabajo.contains(t)
+
     def esMago : Boolean = trabajo match {
       case Some(Mago) => true
       case _ => false
@@ -308,13 +311,13 @@ object TADPQuest {
       val liderPotencial: Option[Heroe] = integrantes.reduceOption((h1,h2) => if(h1.statPrincipal > h2.statPrincipal) h1 else h2)
       if (integrantes.count(_.statPrincipal == liderPotencial.map(_.statPrincipal).get) > 1) None else liderPotencial
     }
+
     lazy val trabajoDelLider: Option[Trabajo] = for {
       lider <- lider
       trabajo <- lider.trabajo
     } yield trabajo
 
     def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
-
   }
 
   //==========================================================================
@@ -332,7 +335,7 @@ object TADPQuest {
     // Siempre depende del equipo, pero en algunos casos también depende del heroe
     // Revisar esta firma de abajo, ya que toma la facilidad como si fuera propia del equipo, cuando puede ser del heroe que realice la tarea
     // Recordar que la facilidad puede no existir
-    def getFacilidad(equipo : Equipo) : Int
+    def getFacilidad(equipo: Equipo, heroe: Heroe) : Int
     def efectoEnElHeroe(heroe : Heroe) : Heroe
 
   }
@@ -344,7 +347,7 @@ object TADPQuest {
     }
 
     // en este caso depende del equipo solamente
-    override def getFacilidad(equipo: Equipo): Int = equipo.trabajoDelLider match {
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = equipo.trabajoDelLider match {
       case Some(Guerrero) => 20
       case _ => 10
     }
@@ -356,9 +359,8 @@ object TADPQuest {
     }
 
     // en este caso depende del heroe
-    override def getFacilidad(equipo: Equipo): Int = {
-      ???
-    }
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = 
+      heroe.inteligencia + 10 * equipo.integrantes.count(heroe => heroe.es(Ladron))
   }
 
   case object robarTalisman extends Tarea {
@@ -366,9 +368,10 @@ object TADPQuest {
       ???
     }
 
-    // en este caso depende del heroe y del equipo
-    override def getFacilidad(equipo: Equipo): Int = {
-      ???
+    // “robar talismán” tiene facilidad igual a la velocidad del héroe, pero no puede ser hecho por equipos cuyo líder no sea un ladrón.
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = equipo.trabajoDelLider match {
+      case Some(Ladron) => heroe.velocidad
+      case _ => 99999999 // que pasa en este caso??? 
     }
   }
 

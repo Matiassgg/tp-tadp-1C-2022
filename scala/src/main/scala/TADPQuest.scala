@@ -339,7 +339,7 @@ object TADPQuest {
     // Siempre depende del equipo, pero en algunos casos también depende del heroe
     // Revisar esta firma de abajo, ya que toma la facilidad como si fuera propia del equipo, cuando puede ser del heroe que realice la tarea
     // Recordar que la facilidad puede no existir
-    def getFacilidad(equipo : Equipo) : Int
+    def getFacilidad(equipo : Equipo, heroe : Heroe) : Int
     def efectoEnElHeroe(heroe : Heroe) : Heroe
 
   }
@@ -351,7 +351,7 @@ object TADPQuest {
     }
 
     // en este caso depende del equipo solamente
-    override def getFacilidad(equipo: Equipo): Int = {
+    override def getFacilidad(equipo: Equipo, heroe : Heroe): Int = {
       if (equipo.lider.get.esGuerrero) 20 else 10
     }
   }
@@ -362,7 +362,7 @@ object TADPQuest {
     }
 
     // en este caso depende del heroe
-    override def getFacilidad(equipo: Equipo): Int = {
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = {
       ???
     }
   }
@@ -373,7 +373,7 @@ object TADPQuest {
     }
 
     // en este caso depende del heroe y del equipo
-    override def getFacilidad(equipo: Equipo): Int = {
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = {
       ???
     }
   }

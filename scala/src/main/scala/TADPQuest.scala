@@ -133,7 +133,7 @@ object TADPQuest {
   case object PalitoMagico extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Mano
 
-    override def restricciones = List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30))
+    override def restricciones = List((h: Heroe) => h.es(Mago) || (h.es(Ladron) && h.inteligenciaBase > 30))
 
     override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,20,0,0))
   }
@@ -155,7 +155,7 @@ object TADPQuest {
   case object EscudoAntiRobo extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Mano
 
-    override def restricciones = List((h: Heroe) => !h.esLadron , (h: Heroe) => h.fuerzaBase > 20)
+    override def restricciones = List((h: Heroe) => !h.es(Ladron) , (h: Heroe) => h.fuerzaBase > 20)
 
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats.recalcularStats(Incrementos(20,0,0,0))
@@ -254,25 +254,7 @@ object TADPQuest {
     //https://www.scala-lang.org/api/2.12.1/scala/Option.html#contains[A1%3E:A](elem:A1):Boolean
     def es(t: Trabajo): Boolean = trabajo.contains(t)
 
-    def esMago : Boolean = trabajo match {
-      case Some(Mago) => true
-      case _ => false
-    }
-
-    def esGuerrero : Boolean = trabajo match {
-      case Some(Guerrero) => true
-      case _ => false
-    }
-
-    def esLadron : Boolean = trabajo match {
-      case Some(Ladron) => true
-      case _ => false
-    }
-
-    def esDesempleado : Boolean = trabajo match {
-      case None => true
-      case _ => false
-    }
+    def esDesempleado : Boolean = trabajo.isEmpty
 
     // Inventario
     def cantidadItemsEquipados: Int = equipamiento.items.size

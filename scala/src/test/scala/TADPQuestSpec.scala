@@ -78,5 +78,57 @@ class TADPQuestSpec extends AnyFreeSpec {
         }
       }
     }
+
+    "Tests de Equipos" - {
+      val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
+      val magoSinDientes = Heroe(Stats(30, 50, 5, 20), List.empty, Equipamiento(None, None, List(Some(PalitoMagico)), List.empty), Some(Mago))
+      val macri = Heroe(Stats(40, 5, 10, 30), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Ladron))
+      val tiktoker = Heroe(Stats(10, 20, 5, 50), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
+      val lukeSkywalker = Heroe(Stats(100, 100, 100, 100), List.empty, Equipamiento(Some(CascoVikingo), None, List.empty, List.empty), Some(Guerrero))
+
+      val theBoys = Equipo("The boys", Set(goku, magoSinDientes, macri), 1000)
+
+      "Podemos obtener el mejor heroe segun un cuantificador" in {
+        def quienEsElMasFuerte = (heroe: Heroe) => heroe.fuerza
+
+        theBoys.mejorHeroeSegun(quienEsElMasFuerte) shouldBe Some(goku)
+      }
+
+/*      "Cuando obtenemos un item se lo damos al que mas incrementa su stat principal" in {
+        def itemIdealParaUnLadron = ArmaduraEleganteSport
+        val macriEleganteSport = macri.equiparseCon(itemIdealParaUnLadron)
+
+        println(macri.statPrincipal)
+        println(macriEleganteSport.statPrincipal)
+
+        theBoys.obtenerItem(ArmaduraEleganteSport).integrantes.contains(macriEleganteSport) shouldBe true
+        theBoys.obtenerItem(ArmaduraEleganteSport).integrantes.contains(macri) shouldBe false
+      }*/
+
+      "Cuando obtenemos un item que no beneficia a nadie, se vende y suma el pozo comun" in {
+        def item = ArmaduraEleganteSport
+        val macriEleganteSport = macri.equiparseCon(ArmaduraEleganteSport)
+
+        theBoys.obtenerItem(ArmaduraEleganteSport).pozoComun shouldBe theBoys.pozoComun + ArmaduraEleganteSport.valorVenta
+      }
+
+      "Se puede incorporar un nuevo miembro al equipo" in {
+        theBoys.obtenerMiembro(tiktoker).integrantes.size shouldBe theBoys.integrantes.size + 1
+      }
+
+      "Se puede reemplazar un miembro del equipo por otro" in {
+        val equipoModificado = theBoys.reemplazarMiembro(magoSinDientes, lukeSkywalker)
+        equipoModificado.integrantes.contains(lukeSkywalker) shouldBe true
+        equipoModificado.integrantes.contains(magoSinDientes) shouldBe false
+      }
+
+      "Se puede obtener el lider del equipo, quien es el que tiene el mayor stat principal" in {
+        theBoys.lider shouldBe Some(goku)
+      }
+
+      "Si al calcular el lider hay empate entre stats principales, se considera que el equipo no tiene lider" in {
+        theBoys.obtenerMiembro(lukeSkywalker).lider shouldBe None
+      }
+    }
   }
 }

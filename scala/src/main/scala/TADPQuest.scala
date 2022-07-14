@@ -139,6 +139,8 @@ object TADPQuest {
   case object ArmaduraEleganteSport extends Item{
     lazy val zonaEquipamiento: ZonaEquipamiento = Torso
 
+    override def valorVenta = 400
+
     override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
   }
 
@@ -267,7 +269,7 @@ object TADPQuest {
     def mejorHeroeSegun(cuantificador: Heroe => Int): Option[Heroe] = integrantes.reduceOption((h1,h2) => if(cuantificador(h1) > cuantificador(h2)) h1 else h2)
 
     def obtenerItem(item: Item): Equipo = {
-      implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.statPrincipal - integrante.equiparseCon(item).statPrincipal
+      implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.equiparseCon(item).statPrincipal - integrante.statPrincipal
       val integrantesBeneficiados = integrantes.filter(integrante => diferenciaStatPrincipal(integrante, item) > 0)
 
       if (integrantesBeneficiados.nonEmpty) {

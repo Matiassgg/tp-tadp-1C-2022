@@ -52,7 +52,7 @@ object TADPQuest {
   // ITEMS
   //==========================================================================
 
-  type Restriccion = Heroe => Boolean
+  type RestriccionItem = Heroe => Boolean
 
   // Primer approach
     /*
@@ -78,12 +78,10 @@ object TADPQuest {
 
   sealed trait Item {
     def zonaEquipamiento: ZonaEquipamiento
-    def restricciones: List[Restriccion] = List.empty
+    def restricciones: List[RestriccionItem] = List.empty
     def dosManos: Boolean = false
     def valorVenta: Int = 0
-
     def getStatsModificados(heroe : Heroe) : Stats
-
     def aplicarEfectoAHeroe(heroe: Heroe): Heroe = heroe.setStat(getStatsModificados(heroe))
   }
 
@@ -181,7 +179,6 @@ object TADPQuest {
     require(manos.size <= 2, "Solo hay dos manos!")
 
     def agregarItem(item: Item) : Equipamiento = {
-
       item.zonaEquipamiento match {
         case Cabeza => copy(cabeza = Some(item))
         case Torso => copy(torso = Some(item))
@@ -295,50 +292,79 @@ object TADPQuest {
       trabajo <- lider.trabajo
     } yield trabajo
 
-    def venderItem(item: Item): Equipo = copy(pozoComun = pozoComun + item.valorVenta)
+    private def agregarOro(valorPorAgregar : Int): Equipo = copy(pozoComun = pozoComun + valorPorAgregar)
+
+    def venderItem(item: Item): Equipo = agregarOro(item.valorVenta)
+
+    def obtenerRecompensaDeMision(recompensa : Int) : Equipo = agregarOro(recompensa)
+
+    def heroeParaTarea(tarea: Tarea): Option[Heroe] = Some(integrantes.maxBy(heroe => tarea.getFacilidad(this, heroe)))
   }
 
   //==========================================================================
   // Misiones
   //==========================================================================
 
-  type Facilidad = Equipo => Int
+  type RestriccionTarea = Equipo => Boolean
 
   sealed trait Tarea {
+    var completada: Boolean = false
+    def restricciones: List[RestriccionTarea] = List.empty
+    def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int]
+    def efectoEnElHeroe(heroe: Heroe): Heroe
 
-    def completada: Boolean = false
-
-    def realizarPor(equipo: Equipo): Tarea = ???
-    // TODO: Como implementar la facilidad de una tarea?
-    // Siempre depende del equipo, pero en algunos casos también depende del heroe
-    // Revisar esta firma de abajo, ya que toma la facilidad como si fuera propia del equipo, cuando puede ser del heroe que realice la tarea
-    // Recordar que la facilidad puede no existir
-    def getFacilidad(equipo: Equipo, heroe: Heroe) : Int
-    def efectoEnElHeroe(heroe : Heroe) : Heroe
-
-  }
-
-  // tiene una facilidad de 10 para cualquier héroe o 20 si el líder del equipo es un guerrero
-  case object pelearContraMonstruo extends Tarea {
-    override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      if (heroe.fuerza < 20) heroe.cambiarHP(heroe.HP - 5) else heroe
+    def puedeSerRealizadaPor(equipo: Equipo) : Boolean = {
+      restricciones.forall(restriccion => restriccion(equipo))
     }
 
-    // en este caso depende del equipo solamente
-    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = equipo.trabajoDelLider match {
-      case Some(Guerrero) => 20
-      case _ => 10
+    def provocarEfectoEn(heroeSeleccionado: Heroe, equipo: Equipo) : Equipo = {
+      val heroeSeleccionadoPostTarea : Heroe = efectoEnElHeroe(heroeSeleccionado)
+      equipo.reemplazarMiembro(heroeSeleccionado, heroeSeleccionadoPostTarea)
+    }
+
+    def realizarPor(equipo: Equipo): Tarea = {
+      if (!puedeSerRealizadaPor(equipo)) return this
+
+      // TODO: retornar la tarea completada una vez provocados los efectos sobre el heroe ??
+      // retorno tarea
+      // val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
+      // provocarEfectoEn(heroeSeleccionado.get, equipo)
+      // copy(completada = true) // rompe
+
+
+      // TODO: o retornar el equipo una vez completada la tarea ??
+      // retorno equipo
+      // val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
+      // provocarEfectoEn(heroeSeleccionado.get, equipo)
+
+      this
+
+    }
+  }
+
+  case object pelearContraMonstruo extends Tarea {
+    val reduccionDeVida : Int = 5
+
+    override def efectoEnElHeroe(heroe: Heroe): Heroe = {
+      if (heroe.fuerza < 20) heroe.cambiarHP(heroe.HP - reduccionDeVida) else heroe
+    }
+
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] = equipo.trabajoDelLider match {
+      case Some(Guerrero) => Some(20)
+      case _ => Some(10)
     }
   }
 
   case object forzarPuerta extends Tarea {
+    val aumentoDeFuerza : Int = 1
+    val reduccionDeHP : Int = 5
+
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      ???
+      if (!(heroe.es(Mago) || heroe.es(Ladron))) heroe.cambiarHP(heroe.HP - reduccionDeHP).cambiarFuerza(heroe.fuerza + aumentoDeFuerza) else heroe
     }
 
-    // en este caso depende del heroe
-    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = 
-      heroe.inteligencia + 10 * equipo.integrantes.count(heroe => heroe.es(Ladron))
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] =
+      Some(heroe.inteligencia + 10 * equipo.integrantes.count(heroe => heroe.es(Ladron)))
   }
 
   case object robarTalisman extends Tarea {
@@ -346,24 +372,43 @@ object TADPQuest {
       ???
     }
 
-    // “robar talismán” tiene facilidad igual a la velocidad del héroe, pero no puede ser hecho por equipos cuyo líder no sea un ladrón.
-    override def getFacilidad(equipo: Equipo, heroe: Heroe): Int = equipo.trabajoDelLider match {
-      case Some(Ladron) => heroe.velocidad
-      case _ => 99999999 // que pasa en este caso??? 
+    override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] = equipo.trabajoDelLider match {
+      case Some(Ladron) => Some(heroe.velocidad)
+      case _ => None
     }
   }
 
   case class Mision(tareas: List[Tarea], completada: Boolean = false, recompensa: Equipo => Equipo) {
     def realizarPor(equipo: Equipo): Mision = {
       val tareasSinRealizar: List[Tarea] = tareas
+      // TODO : Revisar como "enterarse" si las tareas fueron completadas, esta modelado con efecto ...
       tareas.foreach(tarea => tarea.realizarPor(equipo))
       if (tareas.forall(tarea => tarea.completada)) completar() else copy(tareas = tareasSinRealizar)
     }
 
-    def completar(): Mision = {
+    def otorgarRecompensaPara(equipo: Equipo) : Equipo = {
+      if (completada) recompensa(equipo) else equipo
+    }
+
+    private def completar(): Mision = {
       copy(completada = true)
     }
+
   }
+
+  // Por tirar nombres ...
+
+  object MisionTelequino extends Mision(
+    tareas = List(forzarPuerta),
+    recompensa = (equipo : Equipo) => equipo.obtenerRecompensaDeMision(500)
+  )
+
+  object MisionNuevoCamarada extends Mision(
+    tareas = List(pelearContraMonstruo),
+    recompensa = (equipo : Equipo) => equipo.obtenerMiembro(
+      heroe = Heroe(Stats(50, 1, 25, 10), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
+    )
+  )
 
   //==========================================================================
   // La Taberna

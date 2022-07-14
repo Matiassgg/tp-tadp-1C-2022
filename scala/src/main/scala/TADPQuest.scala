@@ -3,21 +3,37 @@ object TADPQuest {
   // STATS
   //==========================================================================
 
-  case class Incrementos (HP: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
+  case class Incrementos (hp: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
 
-  case class Stats (HP: Int, inteligencia: Int, fuerza: Int, velocidad: Int) {
-    require(HP >= 1, "HP debe ser mayor a 1")
-    require(inteligencia >= 1, "inteligencia debe ser mayor a 1")
-    require(fuerza >= 1, "fuerza debe ser mayor a 1")
-    require(velocidad >= 1, "velocidad debe ser mayor a 1")
+  case class Stats (hp: Int = 0, inteligencia: Int= 0, fuerza: Int= 0, velocidad: Int = 0) {
+    def +(stats: Stats): Stats = copy(
+      fuerza       = fuerza + stats.fuerza,
+      hp           = hp + stats.hp,
+      inteligencia = inteligencia + stats.inteligencia,
+      velocidad    = velocidad + stats.velocidad,
+    )
+
+    def -(stats: Stats): Stats = copy(
+      fuerza       = fuerza - stats.fuerza,
+      hp           = hp - stats.hp,
+      inteligencia = inteligencia - stats.inteligencia,
+      velocidad    = velocidad - stats.velocidad,
+    )
+
+    def cambiarTodosLosStats(valor: Int): Stats = copy(
+      fuerza       = valor,
+      hp           = valor,
+      inteligencia = valor,
+      velocidad    = valor,
+    )
 
     def sumarAtributo(atributo1: Int, atributo2: Int) : Int = (atributo1+atributo2).max(1)
-    def cambiarHP(valor: Int) : Stats = copy(HP = sumarAtributo(HP, valor))
+    def cambiarhp(valor: Int) : Stats = copy(hp = sumarAtributo(hp, valor))
     def cambiarFuerza(valor: Int) : Stats = copy(fuerza = sumarAtributo(fuerza, valor))
     def cambiarInteligencia(valor: Int) : Stats = copy(inteligencia = sumarAtributo(inteligencia, valor))
     def cambiarVelocidad(valor: Int) : Stats = copy(velocidad = sumarAtributo(velocidad, valor))
 
-    def recalcularStats(incrementos: Incrementos): Stats = cambiarHP(incrementos.HP).cambiarFuerza(incrementos.fuerza).cambiarVelocidad(incrementos.velocidad).cambiarInteligencia(incrementos.inteligencia)
+    def recalcularStats(incrementos: Incrementos): Stats = cambiarhp(incrementos.hp).cambiarFuerza(incrementos.fuerza).cambiarVelocidad(incrementos.velocidad).cambiarInteligencia(incrementos.inteligencia)
   }
 
   //==========================================================================
@@ -32,7 +48,7 @@ object TADPQuest {
   case object Guerrero extends Trabajo {
     def statPrincipal: Heroe => Int = _.fuerzaBase
     override def aumentarStats: Heroe => Heroe = {
-      super.aumentarStats andThen(_.cambiarHP(10).cambiarFuerza(15).cambiarInteligencia(-10))
+      super.aumentarStats andThen(_.cambiarhp(10).cambiarFuerza(15).cambiarInteligencia(-10))
     }
   }
   case object Mago extends Trabajo {
@@ -44,7 +60,7 @@ object TADPQuest {
   case object Ladron extends Trabajo {
     def statPrincipal: Heroe => Int = _.velocidadBase
     override def aumentarStats: Heroe => Heroe = {
-      super.aumentarStats andThen(_.cambiarHP(-5).cambiarVelocidad(10))
+      super.aumentarStats andThen(_.cambiarhp(-5).cambiarVelocidad(10))
     }
   }
 
@@ -54,6 +70,7 @@ object TADPQuest {
 
   type RestriccionItem = Heroe => Boolean
 
+  // TODO: tal vez es el momento para borrar esto...
   // Primer approach
     /*
     case class Item(zonaEquipamiento: ZonaEquipamiento, incrementos: Incrementos, restricciones: List[Restriccion] = List(), dosManos: Boolean = false) {
@@ -89,14 +106,15 @@ object TADPQuest {
     lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
 
     override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt,heroe.statPrincipal*0.1.toInt))
+      heroe.stats + Stats().cambiarTodosLosStats(heroe.statPrincipal*0.1.toInt)
     }
   }
 
   case object TalismanDelMinimalismo extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
 
-    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(50-(10*heroe.cantidadItemsEquipados)))
+    override def getStatsModificados(heroe: Heroe): Stats =
+      heroe.stats + Stats(hp= 50-(10*heroe.cantidadItemsEquipados))
   }
 
   case object VinchaDelBufaloDeAgua extends Item {
@@ -104,8 +122,8 @@ object TADPQuest {
     override def restricciones = List( (h: Heroe) => h.esDesempleado )
 
     override def getStatsModificados(heroe: Heroe): Stats = {
-      val incrementos = if(heroe.fuerzaBase > heroe.inteligenciaBase) Incrementos(0,30,0,0) else Incrementos(10,0,10,10)
-      heroe.stats.recalcularStats(incrementos)
+      if(heroe.fuerzaBase > heroe.inteligenciaBase) heroe.stats + Stats(inteligencia = 30)
+      else heroe.stats + Stats(10,0,10,10)
     }
   }
 
@@ -118,14 +136,15 @@ object TADPQuest {
   case object EspadaDeLaVida extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento= Mano
 
-    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,0,(heroe.fuerzaBase * -1) + heroe.hpBase,0))
+    override def getStatsModificados(heroe: Heroe): Stats = 
+      heroe.stats + Stats(fuerza = (heroe.fuerzaBase * -1) + heroe.hpBase)
   }
 
   case object CascoVikingo extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Cabeza
     override def restricciones = List( (h: Heroe) => h.fuerzaBase > 30)
 
-    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(10,0,0,0))
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats + Stats(hp = 10)
   }
 
   case object PalitoMagico extends Item {
@@ -133,7 +152,7 @@ object TADPQuest {
 
     override def restricciones = List((h: Heroe) => h.es(Mago) || (h.es(Ladron) && h.inteligenciaBase > 30))
 
-    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,20,0,0))
+    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats + Stats(inteligencia = 20)
   }
 
   case object ArmaduraEleganteSport extends Item{
@@ -141,7 +160,8 @@ object TADPQuest {
 
     override def valorVenta = 400
 
-    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
+    override def getStatsModificados(heroe: Heroe): Stats =
+      heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
   }
 
   case object ArcoViejo extends Item {
@@ -149,7 +169,8 @@ object TADPQuest {
 
     override def dosManos = true
 
-    override def getStatsModificados(heroe: Heroe): Stats = heroe.stats.recalcularStats(Incrementos(0,0,2,0))
+    override def getStatsModificados(heroe: Heroe): Stats =
+      heroe.stats + Stats(fuerza = 2)
   }
 
   case object EscudoAntiRobo extends Item {
@@ -158,7 +179,7 @@ object TADPQuest {
     override def restricciones = List((h: Heroe) => !h.es(Ladron) , (h: Heroe) => h.fuerzaBase > 20)
 
     override def getStatsModificados(heroe: Heroe): Stats = {
-      heroe.stats.recalcularStats(Incrementos(20,0,0,0))
+      heroe.stats + Stats(hp = 20)
     }
   }
 
@@ -208,8 +229,19 @@ object TADPQuest {
   //==========================================================================
 
   case class Heroe(stats: Stats, inventario: List[Item], equipamiento: Equipamiento, trabajo : Option[Trabajo]) {
+    require(hpBase >= 1, "hp debe ser mayor a 0")
+    require(fuerzaBase >= 1, "inteligencia debe ser mayor a 0")
+    require(velocidadBase >= 1, "fuerza debe ser mayor a 0")
+    require(inteligenciaBase >= 1, "velocidad debe ser mayor a 0")
 
-    val statPrincipal: Int = trabajo.map(_.statPrincipal(this)).getOrElse(0)
+    lazy val statPrincipal: Int = trabajo.map(_.statPrincipal(this)).getOrElse(0)
+    
+    // Stats base
+    lazy val hpBase = stats.hp
+    lazy val fuerzaBase = stats.fuerza
+    lazy val velocidadBase = stats.velocidad
+    lazy val inteligenciaBase = stats.inteligencia
+
     def statsConIncrementos: Stats = {
       val heroeConIncrementos = trabajo match {
         case Some(unTrabajo) => unTrabajo.aumentarStats(this)
@@ -219,20 +251,14 @@ object TADPQuest {
       equipamiento.calcularIncrementos(heroeConIncrementos).stats
     }
 
-    // Stats base
-    def hpBase : Int = stats.HP
-    def fuerzaBase : Int = stats.fuerza
-    def velocidadBase : Int = stats.velocidad
-    def inteligenciaBase : Int = stats.inteligencia
-
     // Stats con buffs
-    def HP : Int = statsConIncrementos.HP
+    def hp : Int = statsConIncrementos.hp
     def velocidad : Int = statsConIncrementos.velocidad
     def inteligencia : Int = statsConIncrementos.inteligencia
     def fuerza : Int = statsConIncrementos.fuerza
 
     // Stats Setters
-    def cambiarHP(valor : Int) : Heroe = copy(stats = stats.cambiarHP(valor))
+    def cambiarhp(valor : Int) : Heroe = copy(stats = stats.cambiarhp(valor))
     def cambiarFuerza(valor: Int) : Heroe = copy(stats = stats.cambiarFuerza(valor))
     def cambiarInteligencia(valor: Int) : Heroe = copy(stats = stats.cambiarInteligencia(valor))
     def cambiarVelocidad(valor: Int) : Heroe = copy(stats = stats.cambiarVelocidad(valor))
@@ -348,7 +374,7 @@ object TADPQuest {
     val reduccionDeVida : Int = 5
 
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      if (heroe.fuerza < 20) heroe.cambiarHP(heroe.HP - reduccionDeVida) else heroe
+      if (heroe.fuerza < 20) heroe.cambiarhp(heroe.hp - reduccionDeVida) else heroe
     }
 
     override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] = equipo.trabajoDelLider match {
@@ -359,10 +385,10 @@ object TADPQuest {
 
   case object forzarPuerta extends Tarea {
     val aumentoDeFuerza : Int = 1
-    val reduccionDeHP : Int = 5
+    val reduccionDehp : Int = 5
 
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      if (!(heroe.es(Mago) || heroe.es(Ladron))) heroe.cambiarHP(heroe.HP - reduccionDeHP).cambiarFuerza(heroe.fuerza + aumentoDeFuerza) else heroe
+      if (!(heroe.es(Mago) || heroe.es(Ladron))) heroe.cambiarhp(heroe.hp - reduccionDehp).cambiarFuerza(heroe.fuerza + aumentoDeFuerza) else heroe
     }
 
     override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] =

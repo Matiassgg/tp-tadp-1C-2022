@@ -28,12 +28,16 @@ object TADPQuest {
     )
 
     def sumarAtributo(atributo1: Int, atributo2: Int) : Int = (atributo1+atributo2).max(1)
-    def cambiarhp(valor: Int) : Stats = copy(hp = sumarAtributo(hp, valor))
+    def cambiarHp(valor: Int) : Stats = copy(hp = sumarAtributo(hp, valor))
     def cambiarFuerza(valor: Int) : Stats = copy(fuerza = sumarAtributo(fuerza, valor))
     def cambiarInteligencia(valor: Int) : Stats = copy(inteligencia = sumarAtributo(inteligencia, valor))
     def cambiarVelocidad(valor: Int) : Stats = copy(velocidad = sumarAtributo(velocidad, valor))
 
-    def recalcularStats(incrementos: Incrementos): Stats = cambiarhp(incrementos.hp).cambiarFuerza(incrementos.fuerza).cambiarVelocidad(incrementos.velocidad).cambiarInteligencia(incrementos.inteligencia)
+    def recalcularStats(incrementos: Incrementos): Stats = cambiarHp(incrementos.hp).cambiarFuerza(incrementos.fuerza).cambiarVelocidad(incrementos.velocidad).cambiarInteligencia(incrementos.inteligencia)
+
+    def aptoParaHeroe = hp >= 1 && fuerza >=1 && inteligencia >= 1 && velocidad >= 1
+
+    def normalizarParaHeroe = copy(hp = sumarAtributo(hp, 0), fuerza = sumarAtributo(fuerza, 0), inteligencia = sumarAtributo(inteligencia, 0), velocidad = sumarAtributo(velocidad, 0))
   }
 
   //==========================================================================
@@ -48,7 +52,7 @@ object TADPQuest {
   case object Guerrero extends Trabajo {
     def statPrincipal: Heroe => Int = _.fuerzaBase
     override def aumentarStats: Heroe => Heroe = {
-      super.aumentarStats andThen(_.cambiarhp(10).cambiarFuerza(15).cambiarInteligencia(-10))
+      super.aumentarStats andThen(_.cambiarHp(10).cambiarFuerza(15).cambiarInteligencia(-10))
     }
   }
   case object Mago extends Trabajo {
@@ -60,7 +64,7 @@ object TADPQuest {
   case object Ladron extends Trabajo {
     def statPrincipal: Heroe => Int = _.velocidadBase
     override def aumentarStats: Heroe => Heroe = {
-      super.aumentarStats andThen(_.cambiarhp(-5).cambiarVelocidad(10))
+      super.aumentarStats andThen(_.cambiarHp(-5).cambiarVelocidad(10))
     }
   }
 
@@ -107,6 +111,8 @@ object TADPQuest {
   case object TalismanMaldito extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
 
+    override def valorVenta = 400
+
     override def getStatsModificados(heroe: Heroe): Stats = Stats(1,1,1,1)
   }
 
@@ -135,7 +141,7 @@ object TADPQuest {
   case object ArmaduraEleganteSport extends Item{
     lazy val zonaEquipamiento: ZonaEquipamiento = Torso
 
-    override def valorVenta = 400
+
 
     override def getStatsModificados(heroe: Heroe): Stats =
       heroe.stats + Stats(hp = -30, velocidad = 30)
@@ -235,7 +241,7 @@ object TADPQuest {
     def fuerza : Int = statsConIncrementos.fuerza
 
     // Stats Setters
-    def cambiarhp(valor : Int) : Heroe = copy(stats = stats.cambiarhp(valor))
+    def cambiarHp(valor : Int) : Heroe = copy(stats = stats.cambiarHp(valor))
     def cambiarFuerza(valor: Int) : Heroe = copy(stats = stats.cambiarFuerza(valor))
     def cambiarInteligencia(valor: Int) : Heroe = copy(stats = stats.cambiarInteligencia(valor))
     def cambiarVelocidad(valor: Int) : Heroe = copy(stats = stats.cambiarVelocidad(valor))
@@ -250,7 +256,10 @@ object TADPQuest {
 
     def renunciar : Heroe = copy(trabajo = None)
 
-    def setStat(stat: Stats) : Heroe = copy(stats = stat)
+    def setStat(stat: Stats) : Heroe = stat.aptoParaHeroe match {
+      case true => copy(stats = stat)
+      case false => copy(stats = stat.normalizarParaHeroe)
+    }
 
     //https://www.scala-lang.org/api/2.12.1/scala/Option.html#contains[A1%3E:A](elem:A1):Boolean
     def es(t: Trabajo): Boolean = trabajo.contains(t)
@@ -272,7 +281,9 @@ object TADPQuest {
     def mejorHeroeSegun(cuantificador: Heroe => Int): Option[Heroe] = integrantes.reduceOption((h1,h2) => if(cuantificador(h1) > cuantificador(h2)) h1 else h2)
 
     def obtenerItem(item: Item): Equipo = {
-      implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.equiparseCon(item).statPrincipal - integrante.statPrincipal
+      //implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.equiparseCon(item).statPrincipal - integrante.statPrincipal
+      implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.setStat(item.getStatsModificados(integrante)).statPrincipal - integrante.statPrincipal
+
       val integrantesBeneficiados = integrantes.filter(integrante => diferenciaStatPrincipal(integrante, item) > 0)
 
       if (integrantesBeneficiados.nonEmpty) {
@@ -346,13 +357,15 @@ object TADPQuest {
       this
 
     }
+
   }
+
 
   case object pelearContraMonstruo extends Tarea {
     val reduccionDeVida : Int = 5
 
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      if (heroe.fuerza < 20) heroe.cambiarhp(heroe.hp - reduccionDeVida) else heroe
+      if (heroe.fuerza < 20) heroe.cambiarHp(heroe.hp - reduccionDeVida) else heroe
     }
 
     override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] = equipo.trabajoDelLider match {
@@ -366,7 +379,7 @@ object TADPQuest {
     val reduccionDehp : Int = 5
 
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      if (!(heroe.es(Mago) || heroe.es(Ladron))) heroe.cambiarhp(heroe.hp - reduccionDehp).cambiarFuerza(heroe.fuerza + aumentoDeFuerza) else heroe
+      if (!(heroe.es(Mago) || heroe.es(Ladron))) heroe.cambiarHp(heroe.hp - reduccionDehp).cambiarFuerza(heroe.fuerza + aumentoDeFuerza) else heroe
     }
 
     override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] =
@@ -394,7 +407,6 @@ object TADPQuest {
       tareas.foreach(tarea => tarea.realizarPor(equipo))
       if (tareas.forall(tarea => tarea.completada)) completar() else copy(tareas = tareasSinRealizar)
     }
-
 
     def otorgarRecompensaPara(equipo: Equipo) : Equipo = {
       if (completada) recompensa(equipo) else equipo
@@ -427,8 +439,11 @@ object TADPQuest {
 case class Taberna(misiones: Set[Mision]) {
 
   // Idea general -> no estamos contemplando si el equipo puede o no hacer la tarea.
-  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Option[Mision] = misiones.reduceOption((mision, mision2) => {
-    if ( criterio(mision.recompensa(equipo), mision2.recompensa(equipo)) ) mision else mision2
+  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Option[Mision] = misiones.reduceOption((mision1, mision2) => {
+    if ( criterio(mision1.recompensa(equipo), mision2.recompensa(equipo)) ) mision1 else mision2
   })
+
+  def entrenar(equipo: Equipo) = ???
+  //Primer idea: FoldLeft de misiones. Semilla equipo pasado por parametro. Resultado: Equipo con todas las misiones hechas.
 }
 }

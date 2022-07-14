@@ -96,22 +96,18 @@ class TADPQuestSpec extends AnyFreeSpec {
         theBoys.mejorHeroeSegun(quienEsElMasFuerte) shouldBe Some(goku)
       }
 
-/*      "Cuando obtenemos un item se lo damos al que mas incrementa su stat principal" in {
+      "Cuando obtenemos un item se lo damos al heroe al que mas le incrementaria su stat principal" in {
         def itemIdealParaUnLadron = ArmaduraEleganteSport
         val macriEleganteSport = macri.equiparseCon(itemIdealParaUnLadron)
 
-        println(macri.statPrincipal)
-        println(macriEleganteSport.statPrincipal)
-
         theBoys.obtenerItem(ArmaduraEleganteSport).integrantes.contains(macriEleganteSport) shouldBe true
         theBoys.obtenerItem(ArmaduraEleganteSport).integrantes.contains(macri) shouldBe false
-      }*/
+      }
 
       "Cuando obtenemos un item que no beneficia a nadie, se vende y suma el pozo comun" in {
-        def item = ArmaduraEleganteSport
-        val macriEleganteSport = macri.equiparseCon(ArmaduraEleganteSport)
+        def item = TalismanMaldito
 
-        theBoys.obtenerItem(ArmaduraEleganteSport).pozoComun shouldBe theBoys.pozoComun + ArmaduraEleganteSport.valorVenta
+        theBoys.obtenerItem(TalismanMaldito).pozoComun shouldBe theBoys.pozoComun + TalismanMaldito.valorVenta
       }
 
       "Se puede incorporar un nuevo miembro al equipo" in {

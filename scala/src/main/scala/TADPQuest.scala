@@ -256,9 +256,12 @@ object TADPQuest {
 
     def renunciar : Heroe = copy(trabajo = None)
 
-    def setStat(stat: Stats) : Heroe = stat.aptoParaHeroe match {
-      case true => copy(stats = stat)
-      case false => copy(stats = stat.normalizarParaHeroe)
+    def setStat(stat: Stats) : Heroe = {
+      val stats = stat.aptoParaHeroe match {
+        case true => stat
+        case false => stat.normalizarParaHeroe
+      }
+      copy(stats = stats)
     }
 
     //https://www.scala-lang.org/api/2.12.1/scala/Option.html#contains[A1%3E:A](elem:A1):Boolean

@@ -368,8 +368,11 @@ object TADPQuest {
   }
 
   case object robarTalisman extends Tarea {
+    override def restricciones = List((equipo : Equipo) => equipo.trabajoDelLider.get.equals(Ladron))
+
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      ???
+      // TODO: Cómo hacer para que este talisman sea random o definido por la tarea ??
+      heroe.equiparseCon(TalismanDeDedicacion)
     }
 
     override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] = equipo.trabajoDelLider match {

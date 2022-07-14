@@ -15,12 +15,6 @@ class TADPQuestSpec extends AnyFreeSpec {
         val stats: Stats = Stats(10,5,10,80)
         stats should not be null
       }
-
-      "No se pueden crear stats negativos" in {
-        assertThrows[IllegalArgumentException] {
-          Stats(-1,0,0,0)
-        }
-      }
     }
 
     "Tests de Heroe" - {
@@ -30,8 +24,16 @@ class TADPQuestSpec extends AnyFreeSpec {
       "Tests de Trabajo" - {
         val heroeBase = Heroe(stats, List.empty, equipamiento, Some(Guerrero))
 
+        "No se pueden crear heroes con stats negativos" in {
+          val stats: Stats = Stats(-1, 10, 29, 29)
+
+          assertThrows[IllegalArgumentException] {
+            val heroeBase = Heroe(stats, List.empty, equipamiento, Some(Guerrero))
+          }
+        }
+
         "El heroe tiene los stats modificados por el trabajo" in {
-          heroeBase.HP shouldBe 20
+          heroeBase.hp shouldBe 20
           heroeBase.fuerza shouldBe 44
         }
 
@@ -45,9 +47,9 @@ class TADPQuestSpec extends AnyFreeSpec {
         }
 
         "El heroe cambia sus stats al cambiar de trabajo" in {
-          heroeBase.HP shouldBe 10+10
+          heroeBase.hp shouldBe 10+10
           val heroeLadron: Heroe = heroeBase.convertirseEn(Ladron)
-          heroeLadron.HP shouldBe 10-5
+          heroeLadron.hp shouldBe 10-5
         }
 
         "El heroe puede cambiar a ningun trabajo" in {
@@ -61,7 +63,7 @@ class TADPQuestSpec extends AnyFreeSpec {
         val heroeConItems = Heroe(statsBase, List.empty, Equipamiento(None, Some(ArmaduraEleganteSport), List.empty, List.empty), None)
 
         "Los items de un heroe afectan a sus stats" in {
-          heroeConItems.HP shouldBe 1
+          heroeConItems.hp shouldBe 1
           heroeConItems.velocidad shouldBe 5+30
         }
 

@@ -25,7 +25,7 @@ class TADPQuestSpec extends AnyFreeSpec {
         val heroeBase = Heroe(stats, List.empty, equipamiento, Some(Guerrero))
 
         "No se pueden crear heroes con stats negativos" in {
-          val stats: Stats = Stats(-1, 10, 29, 29)
+          val stats: Stats = Stats(1, -10, 29, 29)
 
           assertThrows[IllegalArgumentException] {
             val heroeBase = Heroe(stats, List.empty, equipamiento, Some(Guerrero))

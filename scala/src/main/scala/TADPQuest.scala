@@ -138,7 +138,7 @@ object TADPQuest {
     override def valorVenta = 400
 
     override def getStatsModificados(heroe: Heroe): Stats =
-      heroe.stats.recalcularStats(Incrementos(-30,0,0,30))
+      heroe.stats + Stats(hp = -30, velocidad = 30)
   }
 
   case object ArcoViejo extends Item {
@@ -311,6 +311,7 @@ object TADPQuest {
   //==========================================================================
 
   type RestriccionTarea = Equipo => Boolean
+  type ResultadoTareaExitosa = (Equipo,Tarea)
 
   sealed trait Tarea {
     var completada: Boolean = false
@@ -394,6 +395,7 @@ object TADPQuest {
       if (tareas.forall(tarea => tarea.completada)) completar() else copy(tareas = tareasSinRealizar)
     }
 
+
     def otorgarRecompensaPara(equipo: Equipo) : Equipo = {
       if (completada) recompensa(equipo) else equipo
     }
@@ -422,5 +424,11 @@ object TADPQuest {
   // La Taberna
   //==========================================================================
 
+case class Taberna(misiones: Set[Mision]) {
 
+  // Idea general -> no estamos contemplando si el equipo puede o no hacer la tarea.
+  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Option[Mision] = misiones.reduceOption((mision, mision2) => {
+    if ( criterio(mision.recompensa(equipo), mision2.recompensa(equipo)) ) mision else mision2
+  })
+}
 }

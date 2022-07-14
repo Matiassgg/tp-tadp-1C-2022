@@ -70,29 +70,6 @@ object TADPQuest {
 
   type RestriccionItem = Heroe => Boolean
 
-  // TODO: tal vez es el momento para borrar esto...
-  // Primer approach
-    /*
-    case class Item(zonaEquipamiento: ZonaEquipamiento, incrementos: Incrementos, restricciones: List[Restriccion] = List(), dosManos: Boolean = false) {
-      require(!(dosManos && !(zonaEquipamiento == Mano)), "Como va a requerir dos manos si no es un item para manos!")
-    }
-
-      case object CascoVikingo extends Item(Cabeza, Incrementos(10,0,0,0), List((h: Heroe) => h.fuerzaBase > 30))
-      case object PalitoMagico extends Item(Mano, Incrementos(0,20,0,0), List((h: Heroe) => h.esMago || (h.esLadron && h.inteligenciaBase > 30)))
-      case object ArmaduraEleganteSport extends Item(Torso, Incrementos(-30,0,0,30))
-      case object ArcoViejo extends Item(Mano, Incrementos(0,0,2,0), List(), true)
-      case object EscudoAntiRobo extends Item(Mano, Incrementos(20,0,0,0), List( (h: Heroe) => !h.esLadron, (h: Heroe) => h.fuerzaBase > 20), false)
-      case object TalismanDeDedicacion extends Item(Talisman, Incrementos()) // TODO:  Todos los stats se incrementan 10% del valor del stat principal del trabajo.
-      case object TalismanDelMinimalismo extends Item(Talisman, Incrementos(50)) // TODO: +50 hp. -10 hp por cada otro ítem equipado.
-
-      // TODO: Si el héroe tiene más fuerza que inteligencia, +30 a la inteligencia; de lo contrario +10 a todos los stats menos la inteligencia.
-      case object VinchaDelBufaloDeAgua extends Item(Cabeza, Incrementos(), List( (h: Heroe) => h.esDesempleado ))
-
-      case object TalismanMaldito extends Item(Talisman, Incrementos()) // Reduce todos los stats a 1.
-
-      case object EspadaDeLaVida extends Item(Mano, Incrementos()) // Hace que la fuerza del héroe sea igual a su hp.
-      */
-
   sealed trait Item {
     def zonaEquipamiento: ZonaEquipamiento
     def restricciones: List[RestriccionItem] = List.empty

@@ -440,19 +440,27 @@ object TADPQuest {
         recompensa(equipo_con_misiones)
       }
       catch {
-        case tfe: TareaFallidaException => {
+        case tfe: TareaFallidaException =>
           throw MisionFallidaException(equipo, tfe.tarea)
-        }
       }
     }
 
-    def realizarTareas(equipo: Equipo): Try[Equipo] = {
+    // ESTO ROMPE EN EL BUILDEO
+/*    def realizarTareas(equipo: Equipo): Try[Equipo] = {
       tareas.foldLeft(Try(equipo))((equipoPrevio, tarea) => {
         case Success(v) =>
           tarea.realizarPor(equipoPrevio.get)
         case Failure(e) => throw TareaFallidaException(tarea)
       })
-    }
+    }*/
+
+    def realizarTareas(equipo: Equipo): Try[Equipo] = tareas.foldLeft(Try(equipo)) {
+        (equipoPrevio: Try[Equipo], tarea: Tarea) => (equipoPrevio, tarea) match {
+          case (Success(equipo), tarea) => tarea.realizarPor(equipo)
+          case (Failure(equipo), tarea) => throw TareaFallidaException(tarea)
+          case _ => equipoPrevio
+        }
+      }
   }
 
   object MisionTelequino extends Mision(
@@ -478,9 +486,8 @@ object TADPQuest {
     if ( criterio(mision1.recompensa(equipo), mision2.recompensa(equipo)) ) mision1 else mision2
   })*/
 
-  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Try[Mision] = Try {
+  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Try[Mision] = ???
 
-    }
   }
 
 //  def entrenar(equipo: Equipo) = misiones.foldLeft(equipo)( (equipoEntrenado,misionSiguiente) =>  )

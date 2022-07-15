@@ -1,3 +1,5 @@
+import scala.util.{Failure, Success, Try}
+
 object TADPQuest {
   //==========================================================================
   // STATS
@@ -84,7 +86,7 @@ object TADPQuest {
   }
 
   case object TalismanDeDedicacion extends Item {
-    lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
+    lazy val zonaEquipamiento: ZonaEquipamiento = Cuello
 
     override def getStatsModificados(heroe: Heroe): Stats = {
       heroe.stats + Stats().cambiarTodosLosStats(heroe.statPrincipal*0.1.toInt)
@@ -92,7 +94,7 @@ object TADPQuest {
   }
 
   case object TalismanDelMinimalismo extends Item {
-    lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
+    lazy val zonaEquipamiento: ZonaEquipamiento = Cuello
 
     override def getStatsModificados(heroe: Heroe): Stats =
       heroe.stats + Stats(hp= 50-(10*heroe.cantidadItemsEquipados))
@@ -109,7 +111,7 @@ object TADPQuest {
   }
 
   case object TalismanMaldito extends Item {
-    lazy val zonaEquipamiento: ZonaEquipamiento = Talisman
+    lazy val zonaEquipamiento: ZonaEquipamiento = Cuello
 
     override def valorVenta = 400
 
@@ -119,7 +121,7 @@ object TADPQuest {
   case object EspadaDeLaVida extends Item {
     lazy val zonaEquipamiento: ZonaEquipamiento= Mano
 
-    override def getStatsModificados(heroe: Heroe): Stats = 
+    override def getStatsModificados(heroe: Heroe): Stats =
       heroe.stats + Stats(fuerza = (heroe.fuerzaBase * -1) + heroe.hpBase)
   }
 
@@ -140,8 +142,6 @@ object TADPQuest {
 
   case object ArmaduraEleganteSport extends Item{
     lazy val zonaEquipamiento: ZonaEquipamiento = Torso
-
-
 
     override def getStatsModificados(heroe: Heroe): Stats =
       heroe.stats + Stats(hp = -30, velocidad = 30)
@@ -174,7 +174,7 @@ object TADPQuest {
   case object Cabeza extends ZonaEquipamiento
   case object Torso extends ZonaEquipamiento
   case object Mano extends ZonaEquipamiento
-  case object Talisman extends ZonaEquipamiento  // Tal vez Cuello en vez de Talisman
+  case object Cuello extends ZonaEquipamiento
 
   case class Equipamiento(
                     cabeza: Option[Item],
@@ -197,7 +197,7 @@ object TADPQuest {
             if (manos.size == 2) copy(manos = manos.tail.appended(Some(item))) else copy(manos = manos.appended(Some(item)))
           }
         }
-        case Talisman => copy(talismanes = talismanes.appended(Some(item)))
+        case Cuello => copy(talismanes = talismanes.appended(Some(item)))
       }
     }
 
@@ -218,12 +218,12 @@ object TADPQuest {
     require(inteligenciaBase >= 1, "velocidad debe ser mayor a 0")
 
     lazy val statPrincipal: Int = trabajo.map(_.statPrincipal(this)).getOrElse(0)
-    
+
     // Stats base
-    lazy val hpBase = stats.hp
-    lazy val fuerzaBase = stats.fuerza
-    lazy val velocidadBase = stats.velocidad
-    lazy val inteligenciaBase = stats.inteligencia
+    lazy val hpBase: Int = stats.hp
+    lazy val fuerzaBase: Int = stats.fuerza
+    lazy val velocidadBase: Int = stats.velocidad
+    lazy val inteligenciaBase: Int = stats.inteligencia
 
     def statsConIncrementos: Stats = {
       val heroeConIncrementos = trabajo match {
@@ -257,10 +257,7 @@ object TADPQuest {
     def renunciar : Heroe = copy(trabajo = None)
 
     def setStat(stat: Stats) : Heroe = {
-      val stats = stat.aptoParaHeroe match {
-        case true => stat
-        case false => stat.normalizarParaHeroe
-      }
+      val stats = if (stat.aptoParaHeroe) stat else stat.normalizarParaHeroe
       copy(stats = stats)
     }
 
@@ -275,8 +272,9 @@ object TADPQuest {
     def agregarAlInventario(item: Item): Heroe = copy(inventario = inventario.appended(item))
   }
 
+
   //==========================================================================
-  // Equipo
+  // EQUIPO
   //==========================================================================
 
   case class Equipo(nombre: String, integrantes: Set[Heroe], pozoComun: Int = 0) {
@@ -284,7 +282,6 @@ object TADPQuest {
     def mejorHeroeSegun(cuantificador: Heroe => Int): Option[Heroe] = integrantes.reduceOption((h1,h2) => if(cuantificador(h1) > cuantificador(h2)) h1 else h2)
 
     def obtenerItem(item: Item): Equipo = {
-      //implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.equiparseCon(item).statPrincipal - integrante.statPrincipal
       implicit def diferenciaStatPrincipal(integrante: Heroe, item: Item) : Int = integrante.setStat(item.getStatsModificados(integrante)).statPrincipal - integrante.statPrincipal
 
       val integrantesBeneficiados = integrantes.filter(integrante => diferenciaStatPrincipal(integrante, item) > 0)
@@ -318,17 +315,19 @@ object TADPQuest {
     def obtenerRecompensaDeMision(recompensa : Int) : Equipo = agregarOro(recompensa)
 
     def heroeParaTarea(tarea: Tarea): Option[Heroe] = Some(integrantes.maxBy(heroe => tarea.getFacilidad(this, heroe)))
+
   }
 
   //==========================================================================
-  // Misiones
+  // TAREAS
   //==========================================================================
 
   type RestriccionTarea = Equipo => Boolean
-  type ResultadoTareaExitosa = (Equipo,Tarea)
+  type ResultadoEquipoTarea= (Equipo,Boolean)
+
+  case class TareaFallidaException(tarea: Tarea) extends RuntimeException
 
   sealed trait Tarea {
-    var completada: Boolean = false
     def restricciones: List[RestriccionTarea] = List.empty
     def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int]
     def efectoEnElHeroe(heroe: Heroe): Heroe
@@ -342,27 +341,21 @@ object TADPQuest {
       equipo.reemplazarMiembro(heroeSeleccionado, heroeSeleccionadoPostTarea)
     }
 
-    def realizarPor(equipo: Equipo): Tarea = {
-      if (!puedeSerRealizadaPor(equipo)) return this
+    // Solución con Tuplas
+/*    def realizarPor(equipo: Equipo): ResultadoEquipoTarea = {
+      if (!puedeSerRealizadaPor(equipo)) return (equipo, false)
+      val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
+      val equipoPostTarea : Equipo = provocarEfectoEn(heroeSeleccionado.get, equipo)
+      (equipoPostTarea, true)
+    }*/
 
-      // TODO: retornar la tarea completada una vez provocados los efectos sobre el heroe ??
-      // retorno tarea
-      // val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
-      // provocarEfectoEn(heroeSeleccionado.get, equipo)
-      // copy(completada = true) // rompe
+    def realizarPor(equipo: Equipo): Try[Equipo] = Try {
+      if (!puedeSerRealizadaPor(equipo)) throw TareaFallidaException(this)
 
-
-      // TODO: o retornar el equipo una vez completada la tarea ??
-      // retorno equipo
-      // val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
-      // provocarEfectoEn(heroeSeleccionado.get, equipo)
-
-      this
-
+      val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
+      provocarEfectoEn(heroeSeleccionado.get, equipo)
     }
-
   }
-
 
   case object pelearContraMonstruo extends Tarea {
     val reduccionDeVida : Int = 5
@@ -389,12 +382,14 @@ object TADPQuest {
       Some(heroe.inteligencia + 10 * equipo.integrantes.count(heroe => heroe.es(Ladron)))
   }
 
-  case object robarTalisman extends Tarea {
+  case class robarTalisman(item : Item) extends Tarea {
+    val talismanPorRobar : Item = item
+    require(item.zonaEquipamiento.equals(Cuello),"¡Tiene que ser un talisman el item por robar!")
+
     override def restricciones = List((equipo : Equipo) => equipo.trabajoDelLider.get.equals(Ladron))
 
     override def efectoEnElHeroe(heroe: Heroe): Heroe = {
-      // TODO: Cómo hacer para que este talisman sea random o definido por la tarea ??
-      heroe.equiparseCon(TalismanDeDedicacion)
+      heroe.equiparseCon(talismanPorRobar)
     }
 
     override def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int] = equipo.trabajoDelLider match {
@@ -403,25 +398,62 @@ object TADPQuest {
     }
   }
 
-  case class Mision(tareas: List[Tarea], completada: Boolean = false, recompensa: Equipo => Equipo) {
-    def realizarPor(equipo: Equipo): Mision = {
+  //==========================================================================
+  // MISIONES
+  //==========================================================================
+
+  case class MisionFallidaException(equipo: Equipo, tareaFallida: Tarea) extends RuntimeException
+
+
+  case class Mision(tareas: List[Tarea], recompensa: Equipo => Equipo) {
+
+    // Esta es una solución usando TUPLAS
+/*    def realizarPor(equipo: Equipo): ResultadoEquipoTarea = {
+      val resultadoPostTareas : ResultadoEquipoTarea = realizarTareas(equipo, tareas)
+      val equipoPostMision = resultadoPostTareas._1
+      val tareasCompletadas = resultadoPostTareas._2
+      (if(tareasCompletadas) equipoPostMision else equipo, tareasCompletadas)
+    }
+
+    def realizarTareas(equipo: Equipo, tareas : List[Tarea] ): ResultadoEquipoTarea = {
       val tareasSinRealizar: List[Tarea] = tareas
-      // TODO : Revisar como "enterarse" si las tareas fueron completadas, esta modelado con efecto ...
-      tareas.foreach(tarea => tarea.realizarPor(equipo))
-      if (tareas.forall(tarea => tarea.completada)) completar() else copy(tareas = tareasSinRealizar)
+      val equipoPostTarea = tareasSinRealizar.head.realizarPor(equipo)._1
+      val tareaCompletada = tareasSinRealizar.head.realizarPor(equipo)._2
+
+      if(tareaCompletada) {
+        tareasSinRealizar.tail.head.realizarPor(equipoPostTarea)
+      } else {
+        (equipoPostTarea, false)
+      }
     }
 
     def otorgarRecompensaPara(equipo: Equipo) : Equipo = {
-      if (completada) recompensa(equipo) else equipo
+      if (realizarPor(equipo)._2) recompensa(equipo) else equipo
+    }*/
+
+    ///////////////////////////////////////////
+
+
+    def realizarPor(equipo: Equipo): Equipo = {
+      try {
+        val equipo_con_misiones : Equipo = realizarTareas(equipo).get
+        recompensa(equipo_con_misiones)
+      }
+      catch {
+        case tfe: TareaFallidaException => {
+          throw MisionFallidaException(equipo, tfe.tarea)
+        }
+      }
     }
 
-    private def completar(): Mision = {
-      copy(completada = true)
+    def realizarTareas(equipo: Equipo): Try[Equipo] = {
+      tareas.foldLeft(Try(equipo))((equipoPrevio, tarea) => {
+        case Success(v) =>
+          tarea.realizarPor(equipoPrevio.get)
+        case Failure(e) => throw TareaFallidaException(tarea)
+      })
     }
-
   }
-
-  // Por tirar nombres ...
 
   object MisionTelequino extends Mision(
     tareas = List(forzarPuerta),
@@ -436,17 +468,21 @@ object TADPQuest {
   )
 
   //==========================================================================
-  // La Taberna
+  // LA TABERNA
   //==========================================================================
 
-case class Taberna(misiones: Set[Mision]) {
+  case class Taberna(misiones: Set[Mision]) {
 
   // Idea general -> no estamos contemplando si el equipo puede o no hacer la tarea.
-  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Option[Mision] = misiones.reduceOption((mision1, mision2) => {
+/*  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Option[Mision] = misiones.reduceOption((mision1, mision2) => {
     if ( criterio(mision1.recompensa(equipo), mision2.recompensa(equipo)) ) mision1 else mision2
-  })
+  })*/
 
-  def entrenar(equipo: Equipo) = ???
+  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Try[Mision] = Try {
+
+    }
+  }
+
+//  def entrenar(equipo: Equipo) = misiones.foldLeft(equipo)( (equipoEntrenado,misionSiguiente) =>  )
   //Primer idea: FoldLeft de misiones. Semilla equipo pasado por parametro. Resultado: Equipo con todas las misiones hechas.
-}
 }

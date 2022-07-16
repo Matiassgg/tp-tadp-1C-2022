@@ -130,8 +130,14 @@ class TADPQuestSpec extends AnyFreeSpec {
     }
 
     "Test de Tareas" - {
+      val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
+      val equipoSolitario = Equipo("Solitario", Set(goku), 1000)
+      //pelearContraMonstruo
+     // forzarPuerta
+      //robarTalisman
       "Un heroe que realiza una tarea es afectado por la misma" in {
-
+        val new_goku : Heroe = robarTalisman(TalismanMaldito).realizarPor(equipoSolitario).get.integrantes.head
+        new_goku.stats shouldBe Stats(1,1,1,1)
       }
 
     }
@@ -159,7 +165,7 @@ class TADPQuestSpec extends AnyFreeSpec {
       }
 
       "En caso de éxito, se cobra la recompensa de la misión y se informa el estado final del equipo" in{
-        .
+
       }
 
       "Sólo se cobran las recompensas de las misiones realizadas con éxito." in {

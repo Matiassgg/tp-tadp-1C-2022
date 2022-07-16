@@ -394,7 +394,7 @@ object TADPQuest {
 
   sealed trait ResultadoMision
   case class MisionExitosa(equipo: Equipo) extends ResultadoMision
-  case class MisionFallida(equipo: Equipo, tarea : Tarea, razonDeFallo : Exception) extends ResultadoMision
+  case class MisionFallida(equipo: Equipo, tarea : Option[Tarea], razonDeFallo : Exception) extends ResultadoMision
   case class MisionFallidaException(equipo: Equipo, tareaFallida: Tarea) extends RuntimeException
 
   case class Mision(tareas: List[Tarea], recompensa: Equipo => Equipo) {
@@ -402,7 +402,8 @@ object TADPQuest {
     def realizarPor(equipo: Equipo): ResultadoMision = {
       realizarTareas(equipo) match {
         case Success(equipoPostTareas) => MisionExitosa(recompensa(equipoPostTareas))
-        case Failure(e: TareaFallidaException) => MisionFallida(equipo, e.tarea, e)
+        case Failure(e: TareaFallidaException) => MisionFallida(equipo, Some(e.tarea), e)
+        case Failure(e: Exception) => MisionFallida(equipo, None, e) // Lo agregamos por recomendación del IDE.
       }
     }
 
@@ -415,7 +416,6 @@ object TADPQuest {
 
     def realizarTareas(equipo: Equipo): Try[Equipo] = tareas.foldLeft(Try(equipo))((equipoPostTarea, nuevaTarea) => nuevaTarea.realizarPor(equipoPostTarea.get))
   }
-
 
   object MisionTelequino extends Mision(
     tareas = List(forzarPuerta),
@@ -436,24 +436,12 @@ object TADPQuest {
   //==========================================================================
 
   case class EleccionFallida(message: String) extends RuntimeException
+  type Criterio = (Equipo, Equipo) => Boolean
 
   case class Taberna(misiones: Set[Mision]) {
 
-    /*
-      Elegir la mejor misión para un equipo, de acuerdo a un criterio ((Equipo,Equipo) => Boolean) que, dados los estados resultantes de hacer que el equipo realice dos misiones
-      retorna true si el resultado de la primera es mejor que el resultado de la segunda.
-      Ejemplo: si el criterio fuese: {(e1, e2) => e1.oro > e2.oro} debería elegirse la misión que más oro le haría ganar al equipo en caso de realizarla.
-      De más está decir que elegir una misión para realizar no debe causar ningún cambio de estado en el equipo.
-      Tener en cuenta que el equipo podría no ser capaz de realizar ninguna misión.
-    */
-    sealed trait ResultadoMision
-    case class MisionExitosa(equipo: Equipo) extends ResultadoMision
-    case class MisionFallida(equipo: Equipo, tarea : Tarea, razonDeFallo : Exception) extends ResultadoMision
-//    case class MisionFallidaException(equipo: Equipo, tareaFallida: Tarea) extends RuntimeException
-
-
-    def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean): Mision = {
-      var mejorMisionPotencial = misiones.reduce((mision1, mision2) => {
+    def obtenerMejorMision(equipo: Equipo, criterio: Criterio, misiones: Set[Mision]): Try[Mision] = Try {
+      val mejorMisionPotencial = misiones.reduce((mision1, mision2) => {
         mision1.realizarPor(equipo) match {
           case MisionExitosa(equipo1) => mision2.realizarPor(equipo) match {
             case MisionExitosa(equipo2) => if (criterio(equipo1, equipo2)) mision1 else mision2
@@ -461,10 +449,25 @@ object TADPQuest {
           }
           case MisionFallida(_, _, _) => mision2
         }
-    })
-      if (mejorMisionPotencial.puedeSerRealizadaPor(equipo) ) mejorMisionPotencial else throw EleccionFallida("No hay mision para elegir")
+      })
+      if (mejorMisionPotencial.puedeSerRealizadaPor(equipo)) mejorMisionPotencial else throw EleccionFallida("No hay mision para elegir")
+    }
+
+    def elegirMision(equipo: Equipo, criterio: Criterio, misiones: Set[Mision]): Option[Mision] = {
+      obtenerMejorMision(equipo, criterio, misiones) match {
+        case Success(mejorMision) => Some(mejorMision)
+        case Failure(e) => None
+      }
+    }
+
+    def entrenar(equipo: Equipo, criterio: Criterio, misiones : Set[Mision]) : Equipo = {
+      val mision : Mision = elegirMision(equipo, criterio, misiones).get
+      val nuevasMisiones = misiones - mision
+
+      mision.realizarPor(equipo) match {
+        case MisionExitosa(equipoPostMision) => if(nuevasMisiones.isEmpty) equipo else entrenar(equipoPostMision, criterio, nuevasMisiones)
+        case MisionFallida(_,_,_) => equipo
+      }
     }
   }
-//  def entrenar(equipo: Equipo) = misiones.foldLeft(equipo)( (equipoEntrenado,misionSiguiente) =>  )
-  //Primer idea: FoldLeft de misiones. Semilla equipo pasado por parametro. Resultado: Equipo con todas las misiones hechas.
 }

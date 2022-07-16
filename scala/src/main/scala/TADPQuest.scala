@@ -5,8 +5,6 @@ object TADPQuest {
   // STATS
   //==========================================================================
 
-  case class Incrementos (hp: Int = 0, inteligencia: Int = 0, fuerza: Int = 0, velocidad: Int = 0)
-
   case class Stats (hp: Int = 0, inteligencia: Int= 0, fuerza: Int= 0, velocidad: Int = 0) {
     def +(stats: Stats): Stats = copy(
       fuerza       = fuerza + stats.fuerza,
@@ -34,8 +32,6 @@ object TADPQuest {
     def cambiarFuerza(valor: Int) : Stats = copy(fuerza = sumarAtributo(fuerza, valor))
     def cambiarInteligencia(valor: Int) : Stats = copy(inteligencia = sumarAtributo(inteligencia, valor))
     def cambiarVelocidad(valor: Int) : Stats = copy(velocidad = sumarAtributo(velocidad, valor))
-
-    def recalcularStats(incrementos: Incrementos): Stats = cambiarHp(incrementos.hp).cambiarFuerza(incrementos.fuerza).cambiarVelocidad(incrementos.velocidad).cambiarInteligencia(incrementos.inteligencia)
 
     def aptoParaHeroe: Boolean = hp >= 1 && fuerza >=1 && inteligencia >= 1 && velocidad >= 1
 

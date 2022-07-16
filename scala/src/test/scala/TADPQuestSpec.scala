@@ -150,43 +150,40 @@ class TADPQuestSpec extends AnyFreeSpec {
       }
     }
 
+    /*
+        "Test de Misiones" - {
+          val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
+          val magoSinDientes = Heroe(Stats(30, 50, 5, 20), List.empty, Equipamiento(None, None, List(Some(PalitoMagico)), List.empty), Some(Mago))
+          val macri = Heroe(Stats(40, 5, 10, 30), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Ladron))
+          val tiktoker = Heroe(Stats(10, 20, 5, 50), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
+          val lukeSkywalker = Heroe(Stats(100, 100, 100, 100), List.empty, Equipamiento(Some(CascoVikingo), None, List.empty, List.empty), Some(Guerrero))
 
-    "Test de Misiones" - {
-      val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
-      val magoSinDientes = Heroe(Stats(30, 50, 5, 20), List.empty, Equipamiento(None, None, List(Some(PalitoMagico)), List.empty), Some(Mago))
-      val macri = Heroe(Stats(40, 5, 10, 30), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Ladron))
-      val tiktoker = Heroe(Stats(10, 20, 5, 50), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
-      val lukeSkywalker = Heroe(Stats(100, 100, 100, 100), List.empty, Equipamiento(Some(CascoVikingo), None, List.empty, List.empty), Some(Guerrero))
-
-      val theBoys = Equipo("The boys", Set(goku, magoSinDientes, macri), 1000)
-      val tareas : List[Tarea] = ???
-
-
-      "En caso de que ningún héroe pueda realizar una de las tareas la misión se considera Fallida" in {
-/*
-        val equipoSinChorros = Equipo("ErnestoAprobanos", Set(magoSinDientes), 0)
-        val recompensa : Equipo => Equipo = MisionRobarBanco.recompensa
-        MisionRobarBanco.realizarPor(equipoSinChorros) shouldBe MisionFallida(equipoSinChorros, Some(MisionRobarBanco.tareas.head), TareaFallidaException(MisionRobarBanco.tareas.head))
-*/
-
-      }
-
-      "Todos los efectos de las tareas realizadas se pierden y se informa el estado del equipo  " +
-        "junto con la tarea que no pudo ser resuelta." in {
+          val theBoys = Equipo("The boys", Set(goku, magoSinDientes, macri), 1000)
+          val tareas : List[Tarea] = ???
 
 
-      }
+          "En caso de que ningún héroe pueda realizar una de las tareas la misión se considera Fallida" in {
+            val equipoSinChorros = Equipo("ErnestoAprobanos", Set(magoSinDientes), 0)
+            val recompensa : Equipo => Equipo = MisionRobarBanco.recompensa
+            MisionRobarBanco.realizarPor(equipoSinChorros) shouldBe MisionFallida(equipoSinChorros, Some(MisionRobarBanco.tareas.head), TareaFallidaException(MisionRobarBanco.tareas.head))
+          }
 
-      "En caso de éxito, se cobra la recompensa de la misión y se informa el estado final del equipo" in{
-       //val equipoExitoso: Equipo = Equipo("Exitoso", Set(tiktoker), 0)
-     //   MisionNuevoCamarada.realizarPor(equipoExitoso) shouldBe MisionExitosa
-      }
-
-      "Cobran las recompensas de las misiones realizadas con éxito." in {
-
-      }
+          "Todos los efectos de las tareas realizadas se pierden y se informa el estado del equipo  " +
+            "junto con la tarea que no pudo ser resuelta." in {
 
 
-    }
+          }
+
+          "En caso de éxito, se cobra la recompensa de la misión y se informa el estado final del equipo" in{
+           //val equipoExitoso: Equipo = Equipo("Exitoso", Set(tiktoker), 0)
+         //   MisionNuevoCamarada.realizarPor(equipoExitoso) shouldBe MisionExitosa
+          }
+
+          "Cobran las recompensas de las misiones realizadas con éxito." in {
+
+          }
+
+
+        }*/
   }
 }

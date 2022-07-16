@@ -129,8 +129,44 @@ class TADPQuestSpec extends AnyFreeSpec {
       }
     }
 
+    "Test de Tareas" - {
+      "Un heroe que realiza una tarea es afectado por la misma" in {
+
+      }
+
+    }
+
     "Test de Misiones" - {
-      val
+      val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
+      val magoSinDientes = Heroe(Stats(30, 50, 5, 20), List.empty, Equipamiento(None, None, List(Some(PalitoMagico)), List.empty), Some(Mago))
+      val macri = Heroe(Stats(40, 5, 10, 30), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Ladron))
+      val tiktoker = Heroe(Stats(10, 20, 5, 50), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
+      val lukeSkywalker = Heroe(Stats(100, 100, 100, 100), List.empty, Equipamiento(Some(CascoVikingo), None, List.empty, List.empty), Some(Guerrero))
+
+      val theBoys = Equipo("The boys", Set(goku, magoSinDientes, macri), 1000)
+      val tareas : List[Tarea] = ???
+      val recompensa : Equipo => Equipo = ???
+
+      val misionImposible = Mision(tareas, recompensa)
+
+      "En caso de que ningún héroe pueda realizar una de las tareas la misión se considera Fallida" in {
+
+      }
+
+      "Todos los efectos de las tareas realizadas se pierden y se informa el estado del equipo  " +
+        "junto con la tarea que no pudo ser resuelta." in {
+
+      }
+
+      "En caso de éxito, se cobra la recompensa de la misión y se informa el estado final del equipo" in{
+        .
+      }
+
+      "Sólo se cobran las recompensas de las misiones realizadas con éxito." in {
+
+      }
+
+
     }
   }
 }

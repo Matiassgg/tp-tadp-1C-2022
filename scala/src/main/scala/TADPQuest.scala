@@ -37,9 +37,9 @@ object TADPQuest {
 
     def recalcularStats(incrementos: Incrementos): Stats = cambiarHp(incrementos.hp).cambiarFuerza(incrementos.fuerza).cambiarVelocidad(incrementos.velocidad).cambiarInteligencia(incrementos.inteligencia)
 
-    def aptoParaHeroe = hp >= 1 && fuerza >=1 && inteligencia >= 1 && velocidad >= 1
+    def aptoParaHeroe: Boolean = hp >= 1 && fuerza >=1 && inteligencia >= 1 && velocidad >= 1
 
-    def normalizarParaHeroe = copy(hp = sumarAtributo(hp, 0), fuerza = sumarAtributo(fuerza, 0), inteligencia = sumarAtributo(inteligencia, 0), velocidad = sumarAtributo(velocidad, 0))
+    def normalizarParaHeroe: Stats = copy(hp = sumarAtributo(hp, 0), fuerza = sumarAtributo(fuerza, 0), inteligencia = sumarAtributo(inteligencia, 0), velocidad = sumarAtributo(velocidad, 0))
   }
 
   //==========================================================================
@@ -230,7 +230,6 @@ object TADPQuest {
         case Some(unTrabajo) => unTrabajo.aumentarStats(this)
         case None => this
       }
-
       equipamiento.calcularIncrementos(heroeConIncrementos).stats
     }
 
@@ -261,7 +260,6 @@ object TADPQuest {
       copy(stats = stats)
     }
 
-    //https://www.scala-lang.org/api/2.12.1/scala/Option.html#contains[A1%3E:A](elem:A1):Boolean
     def es(t: Trabajo): Boolean = trabajo.contains(t)
 
     def esDesempleado : Boolean = trabajo.isEmpty
@@ -422,14 +420,17 @@ object TADPQuest {
     recompensa = (equipo : Equipo) => equipo.obtenerRecompensaDeMision(500)
   )
 
+  object MisionRobarBanco extends Mision(
+    tareas = List(robarTalisman(TalismanMaldito), robarTalisman(TalismanDeDedicacion), robarTalisman(TalismanDelMinimalismo)),
+    recompensa = (equipo : Equipo) => equipo.obtenerRecompensaDeMision(12000)
+  )
+
   object MisionNuevoCamarada extends Mision(
     tareas = List(pelearContraMonstruo),
     recompensa = (equipo : Equipo) => equipo.obtenerMiembro(
       heroe = Heroe(Stats(50, 1, 25, 10), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
     )
   )
-
-  //////////////////////////////////////////////////////////
 
   //==========================================================================
   // LA TABERNA
@@ -456,7 +457,7 @@ object TADPQuest {
     def elegirMision(equipo: Equipo, criterio: Criterio, misiones: Set[Mision]): Option[Mision] = {
       obtenerMejorMision(equipo, criterio, misiones) match {
         case Success(mejorMision) => Some(mejorMision)
-        case Failure(e) => None
+        case Failure(_) => None
       }
     }
 

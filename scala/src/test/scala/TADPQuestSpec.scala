@@ -128,5 +128,9 @@ class TADPQuestSpec extends AnyFreeSpec {
         theBoys.obtenerMiembro(lukeSkywalker).lider shouldBe None
       }
     }
+
+    "Test de Misiones" - {
+      val
+    }
   }
 }

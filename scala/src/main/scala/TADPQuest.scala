@@ -316,6 +316,8 @@ object TADPQuest {
 
     def heroeParaTarea(tarea: Tarea): Option[Heroe] = Some(integrantes.maxBy(heroe => tarea.getFacilidad(this, heroe)))
 
+    def heroeParaTarea(tarea: TareaV2): Option[Heroe] = Some(integrantes.maxBy(heroe => tarea.getFacilidad(this, heroe)))
+
   }
 
   //==========================================================================
@@ -323,9 +325,8 @@ object TADPQuest {
   //==========================================================================
 
   type RestriccionTarea = Equipo => Boolean
-  type ResultadoEquipoTarea= (Equipo,Boolean)
 
-  case class TareaFallidaException(tarea: Tarea) extends RuntimeException
+  case class TareaFallidaException(tarea : Tarea) extends RuntimeException
 
   sealed trait Tarea {
     def restricciones: List[RestriccionTarea] = List.empty
@@ -341,17 +342,8 @@ object TADPQuest {
       equipo.reemplazarMiembro(heroeSeleccionado, heroeSeleccionadoPostTarea)
     }
 
-    // Solución con Tuplas
-/*    def realizarPor(equipo: Equipo): ResultadoEquipoTarea = {
-      if (!puedeSerRealizadaPor(equipo)) return (equipo, false)
-      val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
-      val equipoPostTarea : Equipo = provocarEfectoEn(heroeSeleccionado.get, equipo)
-      (equipoPostTarea, true)
-    }*/
-
     def realizarPor(equipo: Equipo): Try[Equipo] = Try {
       if (!puedeSerRealizadaPor(equipo)) throw TareaFallidaException(this)
-
       val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
       provocarEfectoEn(heroeSeleccionado.get, equipo)
     }
@@ -400,39 +392,12 @@ object TADPQuest {
 
   //==========================================================================
   // MISIONES
-  //==========================================================================
+  //===========================================================================
 
   case class MisionFallidaException(equipo: Equipo, tareaFallida: Tarea) extends RuntimeException
 
 
   case class Mision(tareas: List[Tarea], recompensa: Equipo => Equipo) {
-
-    // Esta es una solución usando TUPLAS
-/*    def realizarPor(equipo: Equipo): ResultadoEquipoTarea = {
-      val resultadoPostTareas : ResultadoEquipoTarea = realizarTareas(equipo, tareas)
-      val equipoPostMision = resultadoPostTareas._1
-      val tareasCompletadas = resultadoPostTareas._2
-      (if(tareasCompletadas) equipoPostMision else equipo, tareasCompletadas)
-    }
-
-    def realizarTareas(equipo: Equipo, tareas : List[Tarea] ): ResultadoEquipoTarea = {
-      val tareasSinRealizar: List[Tarea] = tareas
-      val equipoPostTarea = tareasSinRealizar.head.realizarPor(equipo)._1
-      val tareaCompletada = tareasSinRealizar.head.realizarPor(equipo)._2
-
-      if(tareaCompletada) {
-        tareasSinRealizar.tail.head.realizarPor(equipoPostTarea)
-      } else {
-        (equipoPostTarea, false)
-      }
-    }
-
-    def otorgarRecompensaPara(equipo: Equipo) : Equipo = {
-      if (realizarPor(equipo)._2) recompensa(equipo) else equipo
-    }*/
-
-    ///////////////////////////////////////////
-
 
     def realizarPor(equipo: Equipo): Equipo = {
       try {
@@ -445,22 +410,13 @@ object TADPQuest {
       }
     }
 
-    // ESTO ROMPE EN EL BUILDEO
-/*    def realizarTareas(equipo: Equipo): Try[Equipo] = {
-      tareas.foldLeft(Try(equipo))((equipoPrevio, tarea) => {
-        case Success(v) =>
-          tarea.realizarPor(equipoPrevio.get)
-        case Failure(e) => throw TareaFallidaException(tarea)
-      })
-    }*/
-
     def realizarTareas(equipo: Equipo): Try[Equipo] = tareas.foldLeft(Try(equipo)) {
-        (equipoPrevio: Try[Equipo], tarea: Tarea) => (equipoPrevio, tarea) match {
-          case (Success(equipo), tarea) => tarea.realizarPor(equipo)
-          case (Failure(equipo), tarea) => throw TareaFallidaException(tarea)
-          case _ => equipoPrevio
-        }
+      (equipoPrevio: Try[Equipo], tarea: Tarea) => (equipoPrevio, tarea) match {
+        case (Success(equipo), tarea) => tarea.realizarPor(equipo)
+        case (Failure(equipo), tarea) => throw TareaFallidaException(tarea)
+        case _ => equipoPrevio
       }
+    }
   }
 
   object MisionTelequino extends Mision(
@@ -475,6 +431,50 @@ object TADPQuest {
     )
   )
 
+  ///////////////////////////////////////////////////////////
+
+  sealed trait ResultadoMision
+  case class MisionExitosa(equipo: Equipo) extends ResultadoMision
+  case class MisionFallida(equipo: Equipo, tarea : Tarea, razonDeFallo : Exception) extends ResultadoMision
+  case class TareaFallidaExceptionV2(tarea : TareaV2) extends RuntimeException
+
+  sealed trait TareaV2 {
+    def restricciones: List[RestriccionTarea] = List.empty
+    def getFacilidad(equipo: Equipo, heroe: Heroe): Option[Int]
+    def efectoEnElHeroe(heroe: Heroe): Heroe
+
+    def puedeSerRealizadaPor(equipo: Equipo) : Boolean = {
+      restricciones.forall(restriccion => restriccion(equipo))
+    }
+
+    def provocarEfectoEn(heroeSeleccionado: Heroe, equipo: Equipo) : Equipo = {
+      val heroeSeleccionadoPostTarea : Heroe = efectoEnElHeroe(heroeSeleccionado)
+      equipo.reemplazarMiembro(heroeSeleccionado, heroeSeleccionadoPostTarea)
+    }
+
+    def realizarPor(equipo: Equipo): Try[Equipo] = Try {
+      if (!puedeSerRealizadaPor(equipo)) throw TareaFallidaExceptionV2(this)
+
+      val heroeSeleccionado : Option[Heroe] = equipo.heroeParaTarea(this)
+      provocarEfectoEn(heroeSeleccionado.get, equipo)
+    }
+  }
+
+  case class MisionV2(tareas: List[TareaV2], recompensa: Equipo => Equipo) {
+
+    def realizarPor(equipo: Equipo): ResultadoMision = {
+      realizarTareas(equipo) match {
+        case Success(equipoPostTareas) => MisionExitosa(recompensa(equipoPostTareas))
+        case Failure(e: TareaFallidaException) => MisionFallida(equipo, e.tarea, e)
+      }
+    }
+
+    def realizarTareas(equipo: Equipo): Try[Equipo] = tareas.foldLeft(Try(equipo))((equipoPostTarea, nuevaTarea) => nuevaTarea.realizarPor(equipoPostTarea.get))
+
+  }
+
+  //////////////////////////////////////////////////////////
+
   //==========================================================================
   // LA TABERNA
   //==========================================================================
@@ -486,7 +486,9 @@ object TADPQuest {
     if ( criterio(mision1.recompensa(equipo), mision2.recompensa(equipo)) ) mision1 else mision2
   })*/
 
-  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Try[Mision] = ???
+//  def elegirMision(equipo: Equipo, criterio: (Equipo, Equipo) => Boolean ): Try[Mision] = {
+//
+//  }
 
   }
 

@@ -96,22 +96,18 @@ class TADPQuestSpec extends AnyFreeSpec {
         theBoys.mejorHeroeSegun(quienEsElMasFuerte) shouldBe Some(goku)
       }
 
-/*      "Cuando obtenemos un item se lo damos al que mas incrementa su stat principal" in {
+      "Cuando obtenemos un item se lo damos al heroe al que mas le incrementaria su stat principal" in {
         def itemIdealParaUnLadron = ArmaduraEleganteSport
         val macriEleganteSport = macri.equiparseCon(itemIdealParaUnLadron)
 
-        println(macri.statPrincipal)
-        println(macriEleganteSport.statPrincipal)
-
         theBoys.obtenerItem(ArmaduraEleganteSport).integrantes.contains(macriEleganteSport) shouldBe true
         theBoys.obtenerItem(ArmaduraEleganteSport).integrantes.contains(macri) shouldBe false
-      }*/
+      }
 
       "Cuando obtenemos un item que no beneficia a nadie, se vende y suma el pozo comun" in {
-        def item = ArmaduraEleganteSport
-        val macriEleganteSport = macri.equiparseCon(ArmaduraEleganteSport)
+        def item = TalismanMaldito
 
-        theBoys.obtenerItem(ArmaduraEleganteSport).pozoComun shouldBe theBoys.pozoComun + ArmaduraEleganteSport.valorVenta
+        theBoys.obtenerItem(TalismanMaldito).pozoComun shouldBe theBoys.pozoComun + TalismanMaldito.valorVenta
       }
 
       "Se puede incorporar un nuevo miembro al equipo" in {
@@ -132,5 +128,62 @@ class TADPQuestSpec extends AnyFreeSpec {
         theBoys.obtenerMiembro(lukeSkywalker).lider shouldBe None
       }
     }
+
+    "Test de Tareas" - {
+      val macri = Heroe(Stats(40, 5, 10, 30), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Ladron))
+      val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
+      val equipoSolitario = Equipo("Solitario", Set(macri), 1000)
+      val equipoSinLadron = Equipo("Gente Bien", Set(goku), 200 )
+
+      "Un heroe que realiza una tarea es afectado por la misma" in {
+        val macri_v2 : Heroe = robarTalisman(TalismanMaldito).realizarPor(equipoSolitario).get.integrantes.head
+        macri_v2.statsConIncrementos shouldBe Stats(1,1,1,1)
+      }
+
+      "Facilidad de la tarea" - {
+        "robar talismán tiene facilidad igual a la velocidad del héroe" in {
+          robarTalisman(TalismanMaldito).getFacilidad(equipoSolitario, macri).get shouldBe 40
+        }
+        "robar talisman no puede ser hecho por equipos cuyo líder no sea un ladrón" in {
+          robarTalisman(TalismanMaldito).getFacilidad(equipoSinLadron, goku) shouldBe None
+        }
+      }
+    }
+
+    /*
+        "Test de Misiones" - {
+          val goku = Heroe(Stats(100, 30, 100, 100), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Guerrero))
+          val magoSinDientes = Heroe(Stats(30, 50, 5, 20), List.empty, Equipamiento(None, None, List(Some(PalitoMagico)), List.empty), Some(Mago))
+          val macri = Heroe(Stats(40, 5, 10, 30), List.empty, Equipamiento(None, None, List.empty, List.empty), Some(Ladron))
+          val tiktoker = Heroe(Stats(10, 20, 5, 50), List.empty, Equipamiento(None, None, List.empty, List.empty), None)
+          val lukeSkywalker = Heroe(Stats(100, 100, 100, 100), List.empty, Equipamiento(Some(CascoVikingo), None, List.empty, List.empty), Some(Guerrero))
+
+          val theBoys = Equipo("The boys", Set(goku, magoSinDientes, macri), 1000)
+          val tareas : List[Tarea] = ???
+
+
+          "En caso de que ningún héroe pueda realizar una de las tareas la misión se considera Fallida" in {
+            val equipoSinChorros = Equipo("ErnestoAprobanos", Set(magoSinDientes), 0)
+            val recompensa : Equipo => Equipo = MisionRobarBanco.recompensa
+            MisionRobarBanco.realizarPor(equipoSinChorros) shouldBe MisionFallida(equipoSinChorros, Some(MisionRobarBanco.tareas.head), TareaFallidaException(MisionRobarBanco.tareas.head))
+          }
+
+          "Todos los efectos de las tareas realizadas se pierden y se informa el estado del equipo  " +
+            "junto con la tarea que no pudo ser resuelta." in {
+
+
+          }
+
+          "En caso de éxito, se cobra la recompensa de la misión y se informa el estado final del equipo" in{
+           //val equipoExitoso: Equipo = Equipo("Exitoso", Set(tiktoker), 0)
+         //   MisionNuevoCamarada.realizarPor(equipoExitoso) shouldBe MisionExitosa
+          }
+
+          "Cobran las recompensas de las misiones realizadas con éxito." in {
+
+          }
+
+
+        }*/
   }
 }
